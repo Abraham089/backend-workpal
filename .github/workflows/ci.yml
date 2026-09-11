@@ -1,0 +1,20 @@
+name: SonarQube
+
+on:
+  push:
+    - main
+    - dev
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  SonarQube:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: action/checkout@v6
+      with:
+        fetch-depth: 0
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@<action version or sha1>
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
