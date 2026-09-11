@@ -1,4 +1,4 @@
-name: SonarQube
+name: CI
 
 on:
   push:
@@ -9,12 +9,34 @@ on:
 
 jobs:
   SonarQube:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: action/checkout@v6
-      with:
-        fetch-depth: 0
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@<action version or sha1>
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@<action version or sha1>
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  Dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: |
+          poetry install
+          poetry run pip-audit
+
+  Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: |
+          poetry install
+          poetry run ./tests/tests.py
