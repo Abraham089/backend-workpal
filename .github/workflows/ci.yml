@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - dev
   # pull_request:
@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@4
+        uses: SonarSource/sonarqube-scan-action@94d4f8ac4aaefccd7fb84bff00b0aeb2d65fcd49
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
