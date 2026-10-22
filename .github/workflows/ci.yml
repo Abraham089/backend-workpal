@@ -30,8 +30,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: |
-          pip install poetry
-          poetry install
+          pip install --only-binary :all: "poetry==2.4.1"
+          poetry install --sync --no-root
           poetry run pip-audit
 
   # Tests:
