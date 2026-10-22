@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - "releases/**"
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  SonarQube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@b632445a46f521460d97cad21057b904b24c326f
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  Dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar Poetry y Dependencias
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ":all:"
+        run: |
+          pip install --only-binary :all: "poetry==2.4.1"
+          poetry install --sync --no-root
+          poetry run pip-audit
+
+  # Tests:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.12"
+  #     - run: |
+  #         pip install poetry
+  #         poetry install
+  #         poetry run pytest
