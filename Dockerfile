@@ -10,4 +10,4 @@ RUN pip install poetry \
 && poetry config virtualenvs.create false \
 && poetry install --no-root --no-interaction
 
-CMD ["poetry", "run", "fastapi", "dev", "src/backend_workpal/main.py", "--host", "0.0.0.0"]
+CMD [ "sh","-c", "echo canto se esta viniendo ayuda ", "poetry", "run", "fastapi", "dev", "src/backend_workpal/main.py", "--host", "0.0.0.0"]
