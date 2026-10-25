@@ -16,7 +16,7 @@ class Users(SQLModel, table=True):
   id: int = Field(default=None, primary_key=True)
   password_hash: str
 
-  role_id: str = Field(foreign_key="roles.id")
+  role_id: int = Field(foreign_key="roles.id")
   role: "Roles" = Relationship(back_populates="users")
 
   projects: List["Projects"] = Relationship(back_populates="user")
