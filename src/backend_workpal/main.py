@@ -1,8 +1,7 @@
 from fastapi import FastAPI
-from fastapi.concurrency import asynccontextmanager
+from contextlib import asynccontextmanager
 
-from src.backend_workpal.database.database import create_db_and_tables
-
+from backend_workpal.database.database import create_db_and_tables
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
