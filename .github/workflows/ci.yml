@@ -25,10 +25,10 @@ jobs:
           POETRY_INSTALLER_ONLY_BINARY: ":all:"
         run: |
           pip install --only-binary :all: "poetry==2.4.1"
-          poetry install --sync --no-root
+          poetry install --sync
       - name: Run Tests with Coverage
         run: |
-          poetry run pytest --cov=tests --cov-report=xml:coverage.xml
+          poetry run pytest --cov=src/backend_workpal --cov-report=xml:coverage.xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@b632445a46f521460d97cad21057b904b24c326f
         env:
