@@ -17,6 +17,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Poetry and Dependencies
+        env:
+          POETRY_INSTALLER_ONLY_BINARY: ":all:"
+        run: |
+          pip install --only-binary :all: "poetry==2.4.1"
+          poetry install --sync
+      - name: Run Tests with Coverage
+        run: |
+          poetry run pytest --cov=src/backend_workpal --cov-report=xml:coverage.xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@b632445a46f521460d97cad21057b904b24c326f
         env:
@@ -29,22 +41,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Instalar Poetry y Dependencias
+      - name: Install Poetry and Dependencies
         env:
           POETRY_INSTALLER_ONLY_BINARY: ":all:"
         run: |
           pip install --only-binary :all: "poetry==2.4.1"
           poetry install --sync --no-root
           poetry run pip-audit
-
-  # Tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.12"
-  #     - run: |
-  #         pip install poetry
-  #         poetry install
-  #         poetry run pytest
