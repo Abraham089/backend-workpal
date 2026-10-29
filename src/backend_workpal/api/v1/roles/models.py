@@ -10,4 +10,4 @@ class RolesBase(SQLModel):
 class Roles(RolesBase, table=True):
   id: int = Field(default=None, primary_key=True)
 
-  users: List["Users"] = Relationship(back_populates="roles")
+  users: List["Users"] = Relationship(back_populates="role")

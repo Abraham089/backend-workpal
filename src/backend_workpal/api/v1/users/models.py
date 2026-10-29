@@ -19,5 +19,5 @@ class Users(SQLModel, table=True):
   role_id: int = Field(foreign_key="roles.id")
   role: "Roles" = Relationship(back_populates="users")
 
-  projects: List["Projects"] = Relationship(back_populates="user")
+  projects: List["Projects"] = Relationship(back_populates="user_leader")
   tasks: List["Tasks"] = Relationship(back_populates="assigned_user")

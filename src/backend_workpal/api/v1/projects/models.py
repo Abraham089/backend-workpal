@@ -14,6 +14,6 @@ class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)
 
   user_leader_id: int = Field(foreign_key="users.id")
-  user: "Users" = Relationship(back_populates="projects")
+  user_leader: "Users" = Relationship(back_populates="projects")
 
   tasks: "Tasks" = Relationship(back_populates="project")
