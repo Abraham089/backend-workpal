@@ -1,31 +1,25 @@
-import pytest
-from sqlmodel import Session, SQLModel, create_engine, select
-from sqlmodel.pool import StaticPool
+from sqlmodel import Session, select
 
-from src.backend_workpal.database.database import save
-from src.backend_workpal.api.v1.task_with_skill.models import TaskWithSkill
-from src.backend_workpal.api.v1.tasks.models import Tasks
-from src.backend_workpal.api.v1.skills.models import Skills
-from src.backend_workpal.api.v1.users.models import Users
-from src.backend_workpal.api.v1.projects.models import Projects
-from src.backend_workpal.api.v1.roles.models import Roles
-
-@pytest.fixture(name="session")
-def session_fixture():
-  engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass= StaticPool
-  )
-  SQLModel.metadata.create_all(engine)
-  with Session(engine) as session:
-    yield session
+from backend_workpal.database.database import save
+from backend_workpal.api.v1.task_with_skill.models import TaskWithSkill
+from backend_workpal.api.v1.tasks.models import Tasks
+from backend_workpal.api.v1.skills.models import Skills
+from backend_workpal.api.v1.users.models import Users
+from backend_workpal.api.v1.projects.models import Projects
+from backend_workpal.api.v1.roles.models import Roles
 
 def test_create_things_in_db(session: Session):
   rol = Roles(name= "admin")
   saved_rol = save(session, rol)
 
-  user = Users(password_hash= "example123", role_id= 1)
+  user = Users(
+    name="example name",
+    last_name="example last name",
+    username="example123",
+    mail="examplemail@gmail.com",
+    password_hash= "example123",
+    is_active=True,
+    role_id= 1)
   saved_user = save(session, user)
 
   project = Projects(
