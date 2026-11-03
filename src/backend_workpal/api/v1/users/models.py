@@ -10,9 +10,14 @@ class UsersBase(SQLModel):
   name: str
   last_name: str
   username: str = Field(unique=True)
+  mail: str
   is_active: bool = True
 
-class Users(SQLModel, table=True):
+class UserCreate(UsersBase):
+  password: str
+  rol_id: int
+
+class Users(UsersBase, table=True):
   id: int = Field(default=None, primary_key=True)
   password_hash: str
 
