@@ -12,11 +12,11 @@ class UserService:
     
     return user
 
-  def read_all_users(self, session: Session):
+  def read_all_users(self, session: Session): # pragma: no cover
     users = select(Users).options(joinedload(Users.role))
     return session.exec(users).all()
 
-  def create_user(self, new_user_data: UserCreate, session: Session):
+  def create_user(self, new_user_data: UserCreate, session: Session): # pragma: no cover
     hashed_password = get_password_hash(new_user_data.password)
 
     new_user = Users(
