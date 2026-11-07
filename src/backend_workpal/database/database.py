@@ -5,6 +5,8 @@ from backend_workpal.api.v1.skills.models import Skills
 from backend_workpal.api.v1.users.models import Users
 from backend_workpal.api.v1.projects.models import Projects
 from backend_workpal.api.v1.roles.models import Roles
+from backend_workpal.api.v1.project_members.models import ProjectMembers
+from backend_workpal.api.v1.comments.models import Comments
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
