@@ -2,8 +2,8 @@ from sqlmodel import Session, select, col
 from sqlalchemy.orm import joinedload
 from .models import Users, UserCreate
 from typing import List
-from src.backend_workpal.database.database import save
-from src.backend_workpal.core.security import get_password_hash
+from backend_workpal.database.database import save
+from backend_workpal.core.security import get_password_hash
 
 class UserService:
   def read_user_by_username(self, username:str, session: Session):

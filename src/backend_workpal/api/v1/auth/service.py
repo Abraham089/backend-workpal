@@ -5,11 +5,11 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from typing import Annotated
 from datetime import timedelta, datetime, timezone
-from src.backend_workpal.core.security import verify_password, DUMMY_HASH
-from src.backend_workpal.core.config import settings
+from backend_workpal.core.security import verify_password, DUMMY_HASH
+from backend_workpal.core.config import settings
 from .models import TokenData
 from ..users.service import UserService
-from src.backend_workpal.database.database import get_session
+from backend_workpal.database.database import get_session
 
 user_service = UserService()
 
