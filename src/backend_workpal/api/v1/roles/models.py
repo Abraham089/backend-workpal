@@ -5,7 +5,7 @@ if TYPE_CHECKING:
   from ..users.models import Users
 
 class RolesBase(SQLModel):
-  name: str = Field(unique=True)
+  name: str = Field(unique=True, index=True)
 
 class Roles(RolesBase, table=True):
   id: int = Field(default=None, primary_key=True)
