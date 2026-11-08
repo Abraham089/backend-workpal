@@ -6,13 +6,19 @@ from backend_workpal.database.database import save
 from backend_workpal.core.security import get_password_hash
 
 class UserService:
-  def read_user_by_username(self, username:str, session: Session):
-    statement = select(Users).where(Users.username == username)
+  def read_user_by_id(self, user_id:int, session: Session):
+    statement = select(Users).where(Users.id == user_id).options(joinedload(Users.role))
     user = session.exec(statement).first()
     
     return user
 
-  def read_all_users(self, session: Session): # pragma: no cover
+  def read_user_by_username(self, username:str, session: Session):
+      statement = select(Users).where(Users.username == username)
+      user = session.exec(statement).first()
+      
+      return user
+
+  def read_all_users(self, session: Session):
     users = select(Users).options(joinedload(Users.role))
     return session.exec(users).all()
 
