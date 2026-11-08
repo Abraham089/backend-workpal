@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING
@@ -13,7 +13,7 @@ class ProjectMembersBase(SQLModel):
   can_delete_tasks: bool = Field(default=False)
   can_invite_members: bool = Field(default=False)
   is_leader: bool = Field(default=False)
-  joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+  joined_at: date = Field(default_factory=lambda: date.today())
   
 class ProjectMembers(ProjectMembersBase, table=True):
   id: int = Field(default=None, primary_key=True)
@@ -23,4 +23,3 @@ class ProjectMembers(ProjectMembersBase, table=True):
 
   project_id: int = Field(foreign_key="projects.id", index=True)
   project: Optional["Projects"] = Relationship(back_populates="members")
-

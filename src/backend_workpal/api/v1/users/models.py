@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List
+from pydantic import EmailStr
 
 if TYPE_CHECKING:
   from ..roles.models import Roles
@@ -9,10 +10,11 @@ if TYPE_CHECKING:
   from ..comments.models import Comments
 
 class UsersBase(SQLModel):
-  name: str
-  last_name: str
-  username: str = Field(unique=True)
-  mail: str
+  enrollment: str | None = Field(unique=True)
+  name: str = Field(max_length=50, sa_type=String(50))
+  last_name: str = Field(max_length=50, sa_type=String(50))
+  username: str = Field(unique=True, max_length=30, sa_type=String(30))
+  mail: EmailStr = Field(unique=True, max_length=50, sa_type=String(50))
   is_active: bool = True
 
 class UserCreate(UsersBase):

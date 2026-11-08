@@ -1,4 +1,5 @@
 from sqlmodel import Session, select
+from datetime import date
 
 from backend_workpal.database.database import save
 from backend_workpal.api.v1.task_with_skill.models import TaskWithSkill
@@ -14,20 +15,24 @@ def test_create_things_in_db(session: Session):
   saved_rol = save(session, rol)
 
   user = Users(
+    enrollment="25235457",
     name="example name",
     last_name="example last name",
     username="example123",
     mail="examplemail@gmail.com",
     password_hash= "example123",
     is_active=True,
-    role_id= 1)
+    role_id= saved_rol.id)
   saved_user = save(session, user)
 
   project = Projects(
     name= "Example Project",
     description= "Example description",
     img= "img example",
-    created_by_id= saved_user.id)
+    status="Active",
+    created_by_id= saved_user.id,
+    ending_date=date(2026, 11, 7)
+    )
   saved_project = save(session, project)
 
   project_member = ProjectMembers(
@@ -47,6 +52,7 @@ def test_create_things_in_db(session: Session):
     name= "Example Task",
     description= "Example description",
     status= "Ok",
+    end_date=date.today(),
     project_id= saved_project.id,
     user_id= saved_user.id)
   saved_task = save(session, task)

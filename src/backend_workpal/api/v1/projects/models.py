@@ -1,6 +1,6 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List, Optional
-from datetime import datetime, timezone
+from datetime import date
 
 if TYPE_CHECKING:
   from ..users.models import Users
@@ -9,10 +9,12 @@ if TYPE_CHECKING:
   from ..comments.models import Comments
 
 class ProjectsBase(SQLModel):
-  name: str = Field(unique=True)
-  description: str
+  name: str = Field(unique=True, max_length=40)
+  description: str = Field(max_length=200, sa_type=String(200))
   img: str
-  created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+  created_at: date = Field(default_factory=lambda: date.today())
+  status: str = Field(max_length=15, sa_type=String(15))
+  ending_date: date
 
 class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)
