@@ -11,7 +11,7 @@ if TYPE_CHECKING:
   from ..comments.models import Comments
 
 class UsersBase(SQLModel):
-  enrollment: str | None = Field(unique=True)
+  enrollment: str | None = Field(default=None, unique=True)
   name: str = Field(max_length=50, sa_type=String(50))
   last_name: str = Field(max_length=50, sa_type=String(50))
   username: str = Field(unique=True, max_length=30, sa_type=String(30))
@@ -24,7 +24,7 @@ class UserResponse(UsersBase):
 
 class UserCreate(UsersBase):
   password: str
-  rol_id: int
+  role_id: int
 
 class Users(UsersBase, table=True):
   id: int = Field(default=None, primary_key=True)

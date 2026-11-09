@@ -22,16 +22,15 @@ class UserService:
     users = select(Users).options(joinedload(Users.role))
     return session.exec(users).all()
 
-  def create_user(self, new_user_data: UserCreate, session: Session): # pragma: no cover
-    hashed_password = get_password_hash(new_user_data.password)
-
+  def create_user(self, new_user_data: UserCreate, hashed_password: str, session: Session):
     new_user = Users(
+      enrollment=new_user_data.enrollment,
       name=new_user_data.name,
       last_name=new_user_data.last_name,
       username=new_user_data.username,
       mail=new_user_data.mail,
       password_hash=hashed_password,
-      rol_id=new_user_data.rol_id
+      role_id=new_user_data.role_id
     )
 
     saved_user = save(session, new_user)
