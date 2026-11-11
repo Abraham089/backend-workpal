@@ -8,6 +8,12 @@ if TYPE_CHECKING:
 class SkillsBase(SQLModel):
   name: str = Field(unique=True, max_length=50, sa_type=String(50))
 
+class SkillCreate(SkillsBase):
+  pass
+
+class SkillResponse(SkillsBase):
+  id: int
+
 class Skills(SkillsBase, table=True):
   id: int = Field(default=None, primary_key=True)
 

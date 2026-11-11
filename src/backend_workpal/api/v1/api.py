@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from .auth.routers import router as auth_router
 from .users.routers import router as user_router
+from .skills.routers import router as skill_router
 
 api_router = APIRouter(
   prefix="/v1"
@@ -8,3 +9,4 @@ api_router = APIRouter(
 
 api_router.include_router(auth_router)
 api_router.include_router(user_router)
+api_router.include_router(skill_router)
