@@ -40,3 +40,20 @@ def get_skill_by_id(
       )
   
   return skill
+
+@router.post("/", response_model=SkillResponse, status_code=status.HTTP_201_CREATED)
+def create_skill(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  new_skill_data: SkillCreate,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  created_skill = skill_service.create_skill(new_skill_data, session)
+
+  if not created_skill:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="No se pudo crear la habilidad"
+      )
+
+  return created_skill

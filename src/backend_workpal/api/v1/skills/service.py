@@ -14,3 +14,10 @@ class SkillService:
   def read_all_skills(self, session: Session):
     users = select(Skills)
     return session.exec(users).all()
+
+  def create_skill(self, new_skill_data: SkillCreate, session:Session):
+    new_skill = Skills(
+      name=new_skill_data.name
+    )
+    saved_skill = save(session, new_skill)
+    return saved_skill
