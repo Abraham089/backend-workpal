@@ -78,3 +78,40 @@ def test_get_skill_by_id(client: TestClient, session: Session):
     "id": 1,
     "name": "example skill"
   }
+
+def test_post_skill(client: TestClient, session: Session):
+  rol = Roles(name= "admin")
+  saved_rol = save(session, rol)
+
+  hashed_password = get_password_hash("example_password123")
+    
+  user = Users(
+    name="example name",
+    last_name="example last name",
+    username="example123",
+    mail="examplemail@gmail.com",
+    password_hash= hashed_password,
+    is_active=True,
+    role_id= saved_rol.id)
+  saved_user = save(session, user)
+
+  skill = Skills(
+    name="example skill"
+  )
+
+  login_data = {
+    "username": "example123",
+    "password": "example_password123"
+  }
+    
+  login_response = client.post("/v1/auth/token", data=login_data)
+  assert login_response.status_code == 202
+  
+  response = client.post("/v1/skills/", json=skill.model_dump())
+
+  assert response.status_code == 201
+  data = response.json()
+  assert data == {
+    "id": 1,
+    "name": "example skill"
+  }
