@@ -10,6 +10,9 @@ class RolesBase(SQLModel):
 class RolesResponse(RolesBase):
   id: int
 
+class RoleCreate(RolesBase):
+  pass
+
 class Roles(RolesBase, table=True):
   id: int = Field(default=None, primary_key=True)
 
