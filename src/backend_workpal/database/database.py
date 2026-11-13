@@ -7,6 +7,8 @@ from backend_workpal.api.v1.projects.models import Projects
 from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.project_members.models import ProjectMembers
 from backend_workpal.api.v1.comments.models import Comments
+from backend_workpal.api.v1.institutions.models import Institutions
+from backend_workpal.api.v1.institution_with_user.models import InstitutionWithUser
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
