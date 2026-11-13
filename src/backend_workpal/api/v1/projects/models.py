@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List, Optional
 from datetime import date
 
+from ..users.models import UserResponse
+
 if TYPE_CHECKING:
   from ..users.models import Users
   from ..tasks.models import Tasks
@@ -15,6 +17,15 @@ class ProjectsBase(SQLModel):
   created_at: date = Field(default_factory=lambda: date.today())
   status: str = Field(max_length=15, sa_type=String(15))
   ending_date: date
+
+class ProjectCreate(ProjectsBase):
+  created_by_id: int
+  supervisor_user_id: Optional[int] = None
+
+class ProjectResponse(ProjectsBase):
+  id: int
+  created_by: UserResponse
+  supervisor_user: Optional[UserResponse] = None
 
 class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)
