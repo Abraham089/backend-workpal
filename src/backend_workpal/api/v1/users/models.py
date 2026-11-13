@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List
 from pydantic import EmailStr
 from ..roles.models import RolesResponse
+from ..institution_with_user.models import InstitutionWithUser
 
 if TYPE_CHECKING:
   from ..roles.models import Roles
@@ -9,6 +10,8 @@ if TYPE_CHECKING:
   from ..tasks.models import Tasks
   from ..project_members.models import ProjectMembers
   from ..comments.models import Comments
+  from ..institutions.models import Institutions
+
 
 class UsersBase(SQLModel):
   enrollment: str | None = Field(default=None, unique=True)
@@ -48,3 +51,5 @@ class Users(UsersBase, table=True):
   tasks: List["Tasks"] = Relationship(back_populates="assigned_user")
 
   comments: List["Comments"] = Relationship(back_populates="author")
+
+  institutions: List["Institutions"] = Relationship(back_populates="users", link_model=InstitutionWithUser)
