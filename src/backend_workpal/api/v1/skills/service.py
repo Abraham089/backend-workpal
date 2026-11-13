@@ -12,8 +12,8 @@ class SkillService:
     return skill
 
   def read_all_skills(self, session: Session):
-    users = select(Skills)
-    return session.exec(users).all()
+    skills = select(Skills)
+    return session.exec(skills).all()
 
   def create_skill(self, new_skill_data: SkillCreate, session:Session):
     new_skill = Skills(
