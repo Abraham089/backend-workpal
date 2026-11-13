@@ -9,6 +9,8 @@ from backend_workpal.api.v1.users.models import Users
 from backend_workpal.api.v1.projects.models import Projects
 from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.project_members.models import ProjectMembers
+from backend_workpal.api.v1.institutions.models import Institutions
+from backend_workpal.api.v1.institution_with_user.models import InstitutionWithUser
 
 def test_create_things_in_db(session: Session):
   rol = Roles(name= "admin")
@@ -60,6 +62,20 @@ def test_create_things_in_db(session: Session):
   task_with_skill = TaskWithSkill(task_id=1, skill_id=1)
   saved_task_with_skill = save(session, task_with_skill)
 
+  institution = Institutions(
+    name="Example Institution",
+    description="Example description",
+    color="ffffff",
+    logo="Example Logo"
+  )
+  saved_institution = save(session, institution)
+
+  institution_with_user = InstitutionWithUser(
+    institution_id=saved_institution.id,
+    user_id=saved_user.id
+  )
+  saved_institution_with_user = save(session, institution_with_user)
+
   rol_ressult = session.exec(select(Roles))
   user_ressult = session.exec(select(Users))
   project_ressult = session.exec(select(Projects))
@@ -67,6 +83,8 @@ def test_create_things_in_db(session: Session):
   task_ressult = session.exec(select(Tasks))
   task_with_skill_ressult = session.exec(select(TaskWithSkill))
   project_member_ressult = session.exec(select(ProjectMembers))
+  institution_ressult = session.exec(select(Institutions))
+  institution_with_user_ressult = session.exec(select(InstitutionWithUser))
 
   assert rol_ressult.first() is not None
   assert user_ressult.first() is not None
@@ -75,3 +93,5 @@ def test_create_things_in_db(session: Session):
   assert task_ressult.first() is not None
   assert task_with_skill_ressult.first() is not None
   assert project_member_ressult.first() is not None
+  assert institution_ressult.first() is not None
+  assert institution_with_user_ressult.first() is not None
