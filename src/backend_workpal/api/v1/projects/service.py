@@ -6,7 +6,7 @@ from backend_workpal.database.database import save
 from backend_workpal.core.security import get_password_hash
 
 class ProjectService:
-  def read_project_by_id(self, project_id:int, session: Session): # pragma: no cover
+  def read_project_by_id(self, project_id:int, session: Session):
     statement = select(Projects).where(Projects.id == project_id).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user)
@@ -15,7 +15,7 @@ class ProjectService:
     
     return project
 
-  def read_all_projects(self, session: Session): # pragma: no cover
+  def read_all_projects(self, session: Session):
     projects = select(Projects).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user)
