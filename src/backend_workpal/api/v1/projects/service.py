@@ -53,4 +53,15 @@ class ProjectService:
     session.refresh(saved_project, ["created_by", "supervisor_user"])
 
     return saved_project
+
+  def delete_project(self, delete_project_id: int, session: Session):
+    delete_project = self.read_project_by_id(delete_project_id, session)
+
+    if not delete_project_id:
+      return None
+
+    session.delete(delete_project)
+    session.commit()
+
+    return delete_project_id
   
