@@ -1,6 +1,6 @@
 from sqlmodel import Session, select, col
 from sqlalchemy.orm import joinedload
-from .models import Projects, ProjectCreate
+from .models import Projects, ProjectCreate, ProjectUpdate
 from typing import List
 from backend_workpal.database.database import save
 from backend_workpal.core.security import get_password_hash
@@ -37,3 +37,20 @@ class ProjectService:
     saved_project = save(session, new_project)
 
     return saved_project
+
+  def update_project(self, updated_project_id: int, updated_project: ProjectUpdate, session: Session):
+    updatable_project = self.read_project_by_id(updated_project_id, session)
+
+    if not updatable_project:
+      return None
+
+    project_data = updated_project.model_dump(exclude_unset=True)
+
+    updatable_project.sqlmodel_update(project_data)
+
+    saved_project = save(session, updatable_project)
+
+    session.refresh(saved_project, ["created_by", "supervisor_user"])
+
+    return saved_project
+  

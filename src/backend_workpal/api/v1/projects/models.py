@@ -22,6 +22,10 @@ class ProjectCreate(ProjectsBase):
   created_by_id: int
   supervisor_user_id: Optional[int] = None
 
+class ProjectUpdate(ProjectsBase):
+  created_by_id: int
+  supervisor_user_id: Optional[int] = None
+
 class ProjectResponse(ProjectsBase):
   id: int
   created_by: UserResponse

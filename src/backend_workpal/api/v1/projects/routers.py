@@ -4,7 +4,7 @@ from starlette import status
 from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
-from .models import ProjectCreate, ProjectResponse
+from .models import ProjectCreate, ProjectResponse, ProjectUpdate
 from .service import ProjectService
 from ..auth.service import get_current_user
 
@@ -16,22 +16,6 @@ router = APIRouter(
 
 project_service = ProjectService()
 
-@router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
-def create_project(
-  current_user: Annotated[UserResponse, Depends(get_current_user)],
-  new_project_data: ProjectCreate,
-  session: Annotated[Session, Depends(get_session)],
-  ):
-
-  created_project = project_service.create_project(new_project_data, session)
-
-  if not created_project:
-    raise HTTPException(
-      status_code=status.HTTP_400_BAD_REQUEST,
-      detail="No se pudo crear el proyecto"
-      )
-
-  return created_project
 
 @router.get("/", response_model=List[ProjectResponse], status_code=status.HTTP_202_ACCEPTED)
 def get_all_projects(
@@ -55,3 +39,38 @@ def get_all_projects(
       detail=f"No se encontro proyecto con el id {id_project}"
       )
   return project
+
+@router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+def create_project(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  new_project_data: ProjectCreate,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  created_project = project_service.create_project(new_project_data, session)
+
+  if not created_project:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="No se pudo crear el proyecto"
+      )
+
+  return created_project
+
+@router.put("/{updated_project_id}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
+def put_project(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  updated_project_id: int,
+  updated_project: ProjectUpdate,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+  
+  project_updated = project_service.update_project(updated_project_id, updated_project, session)
+
+  if not project_updated:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"No se encontro proyecto con id {updated_project_id} para editar"
+      )
+
+  return project_updated
