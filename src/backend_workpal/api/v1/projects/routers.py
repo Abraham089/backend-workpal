@@ -74,3 +74,20 @@ def put_project(
       )
 
   return project_updated
+
+@router.delete("/{delete_project_id}", status_code=status.HTTP_200_OK)
+def delete_project(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  delete_project_id: int,
+  session: Annotated[Session, Depends(get_session)],
+):
+
+  deleted_project = project_service.delete_project(delete_project_id, session)
+
+  if not deleted_project:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"No se encontro proyecto con id {delete_project_id}"
+      )
+  
+  return deleted_project
