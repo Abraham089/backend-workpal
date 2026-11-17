@@ -32,3 +32,26 @@ def create_project(
       )
 
   return created_project
+
+@router.get("/", response_model=List[ProjectResponse], status_code=status.HTTP_202_ACCEPTED)
+def get_all_projects(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  session: Annotated[Session, Depends(get_session)],
+):
+  projects = project_service.read_all_projects(session)
+  return projects
+
+@router.get("/{id_project}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
+def get_all_projects(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  id_project: int,
+  session: Annotated[Session, Depends(get_session)],
+):
+  project = project_service.read_project_by_id(id_project, session)
+
+  if not project:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"No se encontro proyecto con el id {id_project}"
+      )
+  return project
