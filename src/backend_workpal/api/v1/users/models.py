@@ -24,6 +24,7 @@ class UsersBase(SQLModel):
 class UserResponse(UsersBase):
   id: int
   role: RolesResponse
+  created_projects: List["Projects"] 
 
 class UserCreate(UsersBase):
   password: str

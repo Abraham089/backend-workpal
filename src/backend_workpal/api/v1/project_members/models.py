@@ -14,12 +14,20 @@ class ProjectMembersBase(SQLModel):
   can_invite_members: bool = Field(default=False)
   is_leader: bool = Field(default=False)
   joined_at: date = Field(default_factory=lambda: date.today())
+
+class ProjectMemberCreate(ProjectMembersBase):
+  user_id: int
+
+class ProjectMemberResponse(ProjectMembersBase):
+  id: int
+  user: "Users"
+  project: "Projects"
   
 class ProjectMembers(ProjectMembersBase, table=True):
   id: int = Field(default=None, primary_key=True)
 
   user_id: int = Field(foreign_key="users.id", index=True)
-  user: Optional["Users"] = Relationship(back_populates="project_memberships")
+  user: "Users" = Relationship(back_populates="project_memberships")
 
   project_id: int = Field(foreign_key="projects.id", index=True)
-  project: Optional["Projects"] = Relationship(back_populates="members")
+  project: "Projects" = Relationship(back_populates="members")

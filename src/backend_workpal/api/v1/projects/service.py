@@ -1,15 +1,19 @@
 from sqlmodel import Session, select, col
 from sqlalchemy.orm import joinedload
 from .models import Projects, ProjectCreate, ProjectUpdate
+from ..project_members.models import ProjectMemberCreate
+from ..project_members.service import ProjectMemberService
 from typing import List
 from backend_workpal.database.database import save
-from backend_workpal.core.security import get_password_hash
+
+project_member_service = ProjectMemberService()
 
 class ProjectService:
   def read_project_by_id(self, project_id:int, session: Session):
     statement = select(Projects).where(Projects.id == project_id).options(
       joinedload(Projects.created_by),
-      joinedload(Projects.supervisor_user)
+      joinedload(Projects.supervisor_user),
+      joinedload(Projects.members)
       )
     project = session.exec(statement).first()
     
@@ -18,7 +22,8 @@ class ProjectService:
   def read_all_projects(self, session: Session):
     projects = select(Projects).options(
       joinedload(Projects.created_by),
-      joinedload(Projects.supervisor_user)
+      joinedload(Projects.supervisor_user),
+      joinedload(Projects.members)
       )
     return session.exec(projects).all()
 
@@ -34,9 +39,27 @@ class ProjectService:
       supervisor_user_id=new_project_data.supervisor_user_id
     )
 
-    saved_project = save(session, new_project)
+    session.add(new_project)
 
-    return saved_project
+    new_member_data = ProjectMemberCreate(
+      can_edit_project_details= True,
+      can_manage_tasks= True,
+      can_delete_tasks= True,
+      can_invite_members= True,
+      is_leader= True,
+      user_id=new_project_data.created_by_id
+      )
+    
+    new_member = project_member_service.create_project_member(new_project.id, new_member_data, session)
+    
+    if not new_member:
+      session.rollback()
+      return None
+
+    session.commit()
+    session.refresh(new_member)
+
+    return new_project
 
   def update_project(self, updated_project_id: int, updated_project: ProjectUpdate, session: Session):
     updatable_project = self.read_project_by_id(updated_project_id, session)

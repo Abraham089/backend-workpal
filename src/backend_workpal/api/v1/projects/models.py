@@ -7,7 +7,7 @@ from ..users.models import UserResponse
 if TYPE_CHECKING:
   from ..users.models import Users
   from ..tasks.models import Tasks
-  from ..project_members.models import ProjectMembers
+  from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
 
 class ProjectsBase(SQLModel):
@@ -30,6 +30,7 @@ class ProjectResponse(ProjectsBase):
   id: int
   created_by: UserResponse
   supervisor_user: Optional[UserResponse] = None
+  members: List["ProjectMemberResponse"]
 
 class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)

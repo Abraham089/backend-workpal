@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from starlette import status
 from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
+from ..project_members.models import ProjectMemberCreate
 from .service import ProjectService
+from ..project_members.service import ProjectMemberService
 from ..auth.service import get_current_user
 
 router = APIRouter(
@@ -15,6 +17,8 @@ router = APIRouter(
 )
 
 project_service = ProjectService()
+
+project_member_service = ProjectMemberService()
 
 
 @router.get("/", response_model=List[ProjectResponse], status_code=status.HTTP_202_ACCEPTED)
@@ -56,6 +60,24 @@ def create_project(
       )
 
   return created_project
+
+@router.post("/{project_id}/members/", response_class=bool, status_code=status.HTTP_201_CREATED)
+def add_project_member(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  project_id: int,
+  new_member_data: ProjectMemberCreate,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+  
+  new_member = project_member_service.create_project_member(project_id, new_member_data, session)
+
+  if not new_member:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail=f"No se pudo agregar el usuario con id {new_member_data.user_id} al proyecto con id {project_id}"
+      )
+
+  return True
 
 @router.put("/{updated_project_id}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
 def put_project(
