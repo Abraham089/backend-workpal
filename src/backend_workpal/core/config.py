@@ -4,7 +4,6 @@ class Settings(BaseSettings):
   # Cors
   FRONTEND_URL: str
   FRONTEND_IP_URL: str
-  FRONTEND_DOCKER_URL: str
 
   # Authentication
   SECRET_KEY: str
