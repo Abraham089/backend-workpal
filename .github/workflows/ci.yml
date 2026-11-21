@@ -4,22 +4,22 @@ on:
   push:
     branches:
       - main
-      - master
-      - develop
-      - "releases/**"
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
+
+env:
+  ALGORITHM: ${{ vars.ALGORITHM }}
+  ACCESS_TOKEN_EXPIRE_MINUTES: ${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES}}
 
 jobs:
   SonarQube:
     runs-on: ubuntu-latest
+    environment: development
     env:
-      FRONTEND_URL: "http://localhost:5173"
-      FRONTEND_IP_URL: "http://127.0.0.1:5173"
-      FRONTEND_DOCKER_URL: "http://frontend:5173"
-      SECRET_KEY: "ci-secret-key"
-      ALGORITHM: "HS256"
-      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+      FRONTEND_IP_URL: ${{ vars.FRONTEND_IP_URL }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,6 +43,7 @@ jobs:
 
   Dependencies:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -55,3 +56,43 @@ jobs:
           pip install --only-binary :all: "poetry==2.4.1"
           poetry install --sync --no-root
           poetry run pip-audit
+
+  Build-and-push-image:
+    runs-on: ubuntu-latest
+    if: contains(fromJSON('["main", "dev"]'), github.ref_name) && github.event_name == 'push'
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+      ENVIRONMENT_NAME: ${{ vars.ENVIRONMENT_NAME }}
+    needs:
+      - Dependencies
+      - SonarQube
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.ENVIRONMENT_NAME }}-${{ github.run_number }}
+            type=raw,value=${{ env.ENVIRONMENT_NAME }}-latest
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
