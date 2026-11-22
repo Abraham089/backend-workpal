@@ -2,10 +2,7 @@ from sqlmodel import create_engine, SQLModel, Session
 from backend_workpal.api.v1.task_with_skill.models import TaskWithSkill
 from backend_workpal.api.v1.tasks.models import Tasks
 from backend_workpal.api.v1.skills.models import Skills
-from backend_workpal.api.v1.users.models import Users
-from backend_workpal.api.v1.projects.models import Projects
 from backend_workpal.api.v1.roles.models import Roles
-from backend_workpal.api.v1.project_members.models import ProjectMembers
 from backend_workpal.api.v1.comments.models import Comments
 from backend_workpal.api.v1.institutions.models import Institutions
 from backend_workpal.api.v1.institution_with_user.models import InstitutionWithUser
