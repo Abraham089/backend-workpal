@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List, Optional
 from datetime import date
 
-from ..users.models import UserResponse
+from ..users.models import UserSummary
 
 if TYPE_CHECKING:
   from ..users.models import Users
@@ -28,9 +28,12 @@ class ProjectUpdate(ProjectsBase):
 
 class ProjectResponse(ProjectsBase):
   id: int
-  created_by: UserResponse
-  supervisor_user: Optional[UserResponse] = None
+  created_by: UserSummary
+  supervisor_user: Optional[UserSummary] = None
   members: List["ProjectMemberResponse"]
+
+class ProjectSummary(ProjectsBase):
+  id: int
 
 class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)
@@ -47,8 +50,16 @@ class Projects(ProjectsBase, table=True):
     sa_relationship_kwargs={"foreign_keys": "[Projects.supervisor_user_id]"}
     )
 
-  members: List["ProjectMembers"] = Relationship(back_populates="project")
+  members: List["ProjectMembers"] = Relationship(
+    back_populates="project",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
-  tasks: List["Tasks"] = Relationship(back_populates="project")
+  tasks: List["Tasks"] = Relationship(
+    back_populates="project",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
-  comments: List["Comments"] = Relationship(back_populates="project")
+  comments: List["Comments"] = Relationship(
+    back_populates="project",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )

@@ -15,7 +15,7 @@ class ProjectService:
       joinedload(Projects.supervisor_user),
       joinedload(Projects.members)
       )
-    project = session.exec(statement).first()
+    project = session.exec(statement).unique().first()
     
     return project
 
@@ -25,7 +25,7 @@ class ProjectService:
       joinedload(Projects.supervisor_user),
       joinedload(Projects.members)
       )
-    return session.exec(projects).all()
+    return session.exec(projects).unique().all()
 
   def create_project(self, new_project_data: ProjectCreate, session: Session):
     new_project = Projects(
@@ -40,6 +40,7 @@ class ProjectService:
     )
 
     session.add(new_project)
+    session.flush()
 
     new_member_data = ProjectMemberCreate(
       can_edit_project_details= True,
@@ -47,7 +48,7 @@ class ProjectService:
       can_delete_tasks= True,
       can_invite_members= True,
       is_leader= True,
-      user_id=new_project_data.created_by_id
+      user_id=new_project_data.created_by_id,
       )
     
     new_member = project_member_service.create_project_member(new_project.id, new_member_data, session)
@@ -57,7 +58,7 @@ class ProjectService:
       return None
 
     session.commit()
-    session.refresh(new_member)
+    session.refresh(new_project, ["created_by", "supervisor_user", "members"])
 
     return new_project
 
@@ -73,14 +74,14 @@ class ProjectService:
 
     saved_project = save(session, updatable_project)
 
-    session.refresh(saved_project, ["created_by", "supervisor_user"])
+    session.refresh(saved_project, ["created_by", "supervisor_user", "members"])
 
     return saved_project
 
   def delete_project(self, delete_project_id: int, session: Session):
     delete_project = self.read_project_by_id(delete_project_id, session)
 
-    if not delete_project_id:
+    if not delete_project:
       return None
 
     session.delete(delete_project)

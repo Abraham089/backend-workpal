@@ -4,11 +4,12 @@ from starlette import status
 from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
+from ..project_members.models import ProjectMemberResponse
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
 from ..project_members.models import ProjectMemberCreate
 from .service import ProjectService
 from ..project_members.service import ProjectMemberService
-from ..auth.service import get_current_user
+from ..auth.service import get_current_user, get_current_project_member_user
 
 router = APIRouter(
   prefix="/projects",
@@ -61,13 +62,19 @@ def create_project(
 
   return created_project
 
-@router.post("/{project_id}/members/", response_class=bool, status_code=status.HTTP_201_CREATED)
+@router.post("/{project_id}/members/", response_model=bool, status_code=status.HTTP_201_CREATED)
 def add_project_member(
-  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
   project_id: int,
   new_member_data: ProjectMemberCreate,
   session: Annotated[Session, Depends(get_session)],
   ):
+
+  if current_user.can_invite_members is False:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="No se tiene permiso para añadir miembros"
+      )
   
   new_member = project_member_service.create_project_member(project_id, new_member_data, session)
 
