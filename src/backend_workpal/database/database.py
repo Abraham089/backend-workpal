@@ -9,6 +9,7 @@ from backend_workpal.api.v1.institution_with_user.models import InstitutionWithU
 from backend_workpal.api.v1.users.models import Users, UserResponse, UserSummary
 from backend_workpal.api.v1.projects.models import Projects, ProjectResponse, ProjectSummary
 from backend_workpal.api.v1.project_members.models import ProjectMembers, ProjectMemberResponse
+from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequests
 
 ProjectMemberResponse.model_rebuild()
 UserResponse.model_rebuild()

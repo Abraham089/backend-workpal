@@ -11,7 +11,7 @@ if TYPE_CHECKING:
   from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
   from ..institutions.models import Institutions
-
+  from ..project_join_requests.models import ProjectJoinRequests
 
 class UsersBase(SQLModel):
   enrollment: str | None = Field(default=None, unique=True)
@@ -58,3 +58,8 @@ class Users(UsersBase, table=True):
   comments: List["Comments"] = Relationship(back_populates="author")
 
   institutions: List["Institutions"] = Relationship(back_populates="users", link_model=InstitutionWithUser)
+
+  join_requests: List["ProjectJoinRequests"] = Relationship(
+    back_populates="user",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+  )

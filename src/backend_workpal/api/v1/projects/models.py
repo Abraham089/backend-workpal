@@ -10,6 +10,7 @@ if TYPE_CHECKING:
   from ..tasks.models import Tasks
   from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
+  from ..project_join_requests.models import ProjectJoinRequests
 
 class ProjectsBase(SQLModel):
   name: str = Field(unique=True, max_length=40)
@@ -64,3 +65,8 @@ class Projects(ProjectsBase, table=True):
     back_populates="project",
     sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+  
+  join_requests: List["ProjectJoinRequests"] = Relationship(
+      back_populates="project",
+      sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+  )
