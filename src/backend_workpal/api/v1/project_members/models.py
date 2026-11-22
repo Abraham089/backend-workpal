@@ -1,11 +1,11 @@
 from datetime import date
 from typing import Optional
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from ..users.models import Users
-  from ..projects.models import Projects
+  from ..users.models import Users, UserSummary
+  from ..projects.models import Projects, ProjectSummary
 
 class ProjectMembersBase(SQLModel):
   can_edit_project_details: bool = Field(default=False) 
@@ -20,11 +20,12 @@ class ProjectMemberCreate(ProjectMembersBase):
 
 class ProjectMemberResponse(ProjectMembersBase):
   id: int
-  user: "Users"
-  project: "Projects"
+  user: "UserSummary"
+  project: "ProjectSummary"
   
 class ProjectMembers(ProjectMembersBase, table=True):
   id: int = Field(default=None, primary_key=True)
+  __table_args__ = (UniqueConstraint("user_id", "project_id"),)
 
   user_id: int = Field(foreign_key="users.id", index=True)
   user: "Users" = Relationship(back_populates="project_memberships")
