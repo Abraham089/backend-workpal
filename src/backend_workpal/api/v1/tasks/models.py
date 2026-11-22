@@ -7,6 +7,7 @@ if TYPE_CHECKING:
   from ..projects.models import Projects
   from ..users.models import Users
   from ..skills.models import Skills
+  from ..comments.models import Comments
 
 class TasksBase(SQLModel):
   name: str = Field(max_length=40, sa_type=String(40))
@@ -24,3 +25,8 @@ class Tasks(TasksBase, table=True):
   assigned_user: Optional["Users"] = Relationship(back_populates="tasks")
 
   skills: List["Skills"] = Relationship(back_populates="tasks", link_model=TaskWithSkill)
+
+  comments: List["Comments"] = Relationship(
+    back_populates="task",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )

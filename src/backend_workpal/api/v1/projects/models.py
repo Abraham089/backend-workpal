@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 from datetime import date
 
 from ..users.models import UserSummary
+from ..comments.models import CommentResponse
 
 if TYPE_CHECKING:
   from ..users.models import Users
