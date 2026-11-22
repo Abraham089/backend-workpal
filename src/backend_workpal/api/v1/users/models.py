@@ -6,9 +6,9 @@ from ..institution_with_user.models import InstitutionWithUser
 
 if TYPE_CHECKING:
   from ..roles.models import Roles
-  from ..projects.models import Projects
+  from ..projects.models import Projects, ProjectSummary
   from ..tasks.models import Tasks
-  from ..project_members.models import ProjectMembers
+  from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
   from ..institutions.models import Institutions
 
@@ -24,6 +24,11 @@ class UsersBase(SQLModel):
 class UserResponse(UsersBase):
   id: int
   role: RolesResponse
+  created_projects: List["ProjectSummary"]
+  project_memberships: List["ProjectMemberResponse"]
+
+class UserSummary(UsersBase):
+  id: int
 
 class UserCreate(UsersBase):
   password: str

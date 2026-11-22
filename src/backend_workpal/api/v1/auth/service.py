@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status, Cookie
-from sqlmodel import Session
+from sqlmodel import Session, select
 import urllib.parse
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -9,6 +9,8 @@ from backend_workpal.core.security import verify_password, DUMMY_HASH
 from backend_workpal.core.config import settings
 from .models import TokenData
 from ..users.service import UserService
+from ..users.models import UserResponse
+from ..project_members.models import ProjectMembers
 from backend_workpal.database.database import get_session
 
 user_service = UserService()
@@ -58,3 +60,22 @@ def get_current_user(session: Annotated[Session, Depends(get_session)], access_t
     if user is None:
         raise credentials_exception
     return user
+
+def get_current_project_member_user(
+        session: Annotated[Session, Depends(get_session)],
+        current_user: Annotated[UserResponse, Depends(get_current_user)],
+        project_id: int
+        ):
+    statement = select(ProjectMembers).where(
+        ProjectMembers.user_id == current_user.id,
+        ProjectMembers.project_id == project_id
+        )
+    user_member = session.exec(statement).first()
+
+    if not user_member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in a project"
+        )
+
+    return user_member
