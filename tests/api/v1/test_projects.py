@@ -5,9 +5,9 @@ from fastapi.testclient import TestClient
 from backend_workpal.database.database import save
 from backend_workpal.api.v1.users.models import UserSummary, UserCreate
 from backend_workpal.api.v1.roles.models import Roles
-from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse
+from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse, ProjectSummary
 from backend_workpal.api.v1.project_members.models import ProjectMemberCreate
-from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate
+from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestUpdate, JoinRequestStatus
 
 def _create_and_login_user(
     client: TestClient,
@@ -145,7 +145,7 @@ def test_post_join_request(client: TestClient, session: Session):
   join_request_response = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
   assert join_request_response.status_code == 202
 
-def test_join_requests_by_project_id(client: TestClient, session: Session):
+def test_read_join_requests_by_project_id(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
 
   new_project = ProjectCreate(
@@ -258,6 +258,73 @@ def test_put_project(client: TestClient, session: Session):
   project_data = ProjectResponse.model_validate(put_project_response.json())
   assert project_data.name == "Example Project 2"
   assert project_data.created_by == user_data
+
+def test_update_project_join_request(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  project_summary = ProjectSummary.model_validate(project_create_response.json())
+
+  project_join_request_create = ProjectJoinRequestCreate(message="Example message")
+
+  user_1_data = _create_and_login_user(client, session,rol="Example rol", username="example 2", mail="examplemail2@gmail.com")
+
+  join_request_response_1 = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
+  assert join_request_response_1.status_code == 202
+
+  user_2_data = _create_and_login_user(client, session,rol="Example rol 2", username="example 3", mail="examplemail3@gmail.com")
+
+  join_request_response_2 = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
+  assert join_request_response_2.status_code == 202
+  
+  login_data = {
+    "username": "example123",
+    "password": "example_password123"
+  }
+      
+  login_response = client.post("/v1/auth/token", data=login_data)
+  assert login_response.status_code == 202
+
+  update_status = ProjectJoinRequestUpdate(status=JoinRequestStatus.ACCEPTED)
+
+  join_request_response = client.put("/v1/projects/1/join_request/1", json=update_status.model_dump(mode="json"))
+  assert join_request_response.status_code == 202
+
+  data = join_request_response.json()
+  assert data == {
+    "id": 1,
+    "message": project_join_request_create.message,
+    "status": update_status.status.value,
+    "created_at": date.today().isoformat(),
+    "user": user_1_data.model_dump(mode="json"),
+    "project": project_summary.model_dump(mode="json")
+  }
+
+  update_status = ProjectJoinRequestUpdate(status=JoinRequestStatus.REJECTED)
+  
+  join_request_response = client.put("/v1/projects/1/join_request/2", json=update_status.model_dump(mode="json"))
+  assert join_request_response.status_code == 202
+  
+  data = join_request_response.json()
+  assert data == {
+    "id": 2,
+    "message": project_join_request_create.message,
+    "status": update_status.status.value,
+    "created_at": date.today().isoformat(),
+    "user": user_2_data.model_dump(mode="json"),
+    "project": project_summary.model_dump(mode="json")
+  }
 
 def test_delete_project(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
