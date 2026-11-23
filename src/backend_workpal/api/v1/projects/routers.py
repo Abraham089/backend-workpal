@@ -6,12 +6,13 @@ from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
 from ..project_members.models import ProjectMemberResponse
 from ..project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestResponse
+from ..project_members.models import ProjectMembers
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
 from ..project_members.models import ProjectMemberCreate
 from .service import ProjectService
 from ..project_members.service import ProjectMemberService
 from ..project_join_requests.service import JoinRequestService
-from ..auth.service import get_current_user, get_current_project_member_user
+from ..auth.service import get_current_user, get_current_project_member_user, get_add_member_user
 
 router = APIRouter(
   prefix="/projects",
@@ -48,6 +49,17 @@ def get_all_projects(
       detail=f"No se encontro proyecto con el id {id_project}"
       )
   return project
+
+@router.get("/{project_id}/join_requests/", response_model=List[ProjectJoinRequestResponse], status_code=status.HTTP_202_ACCEPTED)
+def get_join_requests_by_project_id(
+  project_id: int,
+  current_member: Annotated[ProjectMembers, Depends(get_add_member_user)],
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  join_requests = project_join_request_service.read_join_request_by_project_id(project_id, session)
+
+  return join_requests
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
