@@ -5,7 +5,7 @@ from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
 from ..project_members.models import ProjectMemberResponse
-from ..project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestResponse
+from ..project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestResponse, ProjectJoinRequestUpdate
 from ..project_members.models import ProjectMembers
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
 from ..project_members.models import ProjectMemberCreate
@@ -136,6 +136,25 @@ def put_project(
       )
 
   return project_updated
+
+@router.put("/{project_id}/join_request/{request_id}", response_model=ProjectJoinRequestResponse, status_code=status.HTTP_202_ACCEPTED)
+def update_project_join_request(
+  project_id: int,
+  request_id: int,
+  update_status: ProjectJoinRequestUpdate,
+  current_member: Annotated[ProjectMembers, Depends(get_add_member_user)],
+  session: Annotated[Session, Depends(get_session)],
+):
+
+  updated_join_request = project_join_request_service.update_join_request(request_id, project_id, update_status, session)
+
+  if not updated_join_request:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="No fue posible aceptar o cancelar el status"
+      )
+  
+  return updated_join_request
 
 @router.delete("/{delete_project_id}", status_code=status.HTTP_200_OK)
 def delete_project(

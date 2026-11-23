@@ -1,12 +1,23 @@
 from sqlmodel import Session, select, col
 from sqlalchemy.orm import joinedload
-from .models import ProjectJoinRequests, ProjectJoinRequestCreate
+from .models import ProjectJoinRequests, ProjectJoinRequestCreate, ProjectJoinRequestUpdate
+from ..project_members.models import ProjectMemberCreate
 from ..project_members.service import ProjectMemberService
 from backend_workpal.database.database import save
 
 project_member_service = ProjectMemberService()
 
 class JoinRequestService:
+  def read_join_request_by_id(self, request_id: int, session: Session):
+    statement = select(ProjectJoinRequests).options(
+      joinedload(ProjectJoinRequests.user),
+      joinedload(ProjectJoinRequests.project),
+      ).where(ProjectJoinRequests.id == request_id)
+
+    join_request = session.exec(statement).first()
+    
+    return join_request
+  
   def read_join_request_by_project_id(self, project_id: int, session: Session):
     statement = select(ProjectJoinRequests).options(
       joinedload(ProjectJoinRequests.user),
@@ -50,4 +61,27 @@ class JoinRequestService:
     session.refresh(saved_join_request, ["user", "project"])
 
     return saved_join_request
+
+  def update_join_request(self, request_id: int, project_id: int, update_status: ProjectJoinRequestUpdate, session: Session):
+    updatable_request = self.read_join_request_by_id(request_id, session)
+
+    if not updatable_request or updatable_request.project_id != project_id:
+      return None
+
+    if update_status.status.name == 'ACCEPTED':
+      new_member_data = ProjectMemberCreate(
+        user_id= updatable_request.user_id
+      )
+      new_member = project_member_service.create_project_member(project_id, new_member_data, session)
+
+      if not new_member:
+        return None
+
+    updatable_request.status = update_status.status
+
+    saved_join_request = save(session, updatable_request)
+    
+    session.refresh(saved_join_request, ["user", "project"])
+
+    return updatable_request
   
