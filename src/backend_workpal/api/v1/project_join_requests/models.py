@@ -1,19 +1,25 @@
 from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional, TYPE_CHECKING
 from datetime import date
+from enum import Enum
 from ..users.models import Users, UserSummary
 from ..projects.models import Projects, ProjectSummary
 
+class JoinRequestStatus(str, Enum):
+  PENDING = "pending"
+  ACCEPTED = "accepted"
+  REJECTED = "rejected"
+
 class ProjectJoinRequestsBase(SQLModel):
   message: Optional[str] = Field(default=None, max_length=200)
-  status: str = Field(default="pending", max_length=15)
+  status: JoinRequestStatus = Field(default=JoinRequestStatus.PENDING)
   created_at: date = Field(default_factory=lambda: date.today())
 
 class ProjectJoinRequestCreate(SQLModel):
   message: Optional[str] = Field(default=None, max_length=200)
 
 class ProjectJoinRequestUpdate(SQLModel):
-  status: str = Field(max_length=15)
+  status: JoinRequestStatus
 
 class ProjectJoinRequestResponse(ProjectJoinRequestsBase):
   id: int
