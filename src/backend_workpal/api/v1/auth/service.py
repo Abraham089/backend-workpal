@@ -35,8 +35,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 def get_current_user(session: Annotated[Session, Depends(get_session)], access_token: Annotated[str | None, Cookie()] = None):
     credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate crerdentials"
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate crerdentials"
     )
     if not access_token:
        raise credentials_exception
@@ -62,10 +62,10 @@ def get_current_user(session: Annotated[Session, Depends(get_session)], access_t
     return user
 
 def get_current_project_member_user(
-        session: Annotated[Session, Depends(get_session)],
-        current_user: Annotated[UserResponse, Depends(get_current_user)],
-        project_id: int
-        ):
+      session: Annotated[Session, Depends(get_session)],
+      current_user: Annotated[UserResponse, Depends(get_current_user)],
+      project_id: int
+      ):
     statement = select(ProjectMembers).where(
         ProjectMembers.user_id == current_user.id,
         ProjectMembers.project_id == project_id
@@ -79,3 +79,12 @@ def get_current_project_member_user(
         )
 
     return user_member
+
+def get_add_member_user(
+      current_member: Annotated[ProjectMembers, Depends(get_current_project_member_user)]
+    ):
+    if not current_member.can_invite_members:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This user dont have rights to add users")
+    return current_member

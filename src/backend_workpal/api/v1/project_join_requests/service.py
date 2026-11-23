@@ -1,4 +1,5 @@
 from sqlmodel import Session, select, col
+from sqlalchemy.orm import joinedload
 from .models import ProjectJoinRequests, ProjectJoinRequestCreate
 from ..project_members.service import ProjectMemberService
 from backend_workpal.database.database import save
@@ -6,6 +7,16 @@ from backend_workpal.database.database import save
 project_member_service = ProjectMemberService()
 
 class JoinRequestService:
+  def read_join_request_by_project_id(self, project_id: int, session: Session):
+    statement = select(ProjectJoinRequests).options(
+      joinedload(ProjectJoinRequests.user),
+      joinedload(ProjectJoinRequests.project),
+      ).where(ProjectJoinRequests.project_id == project_id)
+
+    join_requests = session.exec(statement).all()
+
+    return join_requests
+  
   def read_join_request_by_user_and_project_id(self, user_id: int, project_id: int, session: Session):
     statement = select(ProjectJoinRequests).where(
       ProjectJoinRequests.user_id == user_id,
