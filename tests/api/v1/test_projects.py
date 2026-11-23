@@ -8,10 +8,15 @@ from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse
 from backend_workpal.api.v1.project_members.models import ProjectMemberCreate
 
-def test_post_project(client: TestClient, session: Session):
+def _create_and_login_user(
+    client: TestClient,
+    session: Session,
+    username: str = "example123",
+    mail: str = "examplemail@gmail.com",
+):
   rol = Roles(name= "admin")
   saved_rol = save(session, rol)
-    
+      
   user = UserCreate(
     name="example name",
     last_name="example last name",
@@ -21,19 +26,24 @@ def test_post_project(client: TestClient, session: Session):
     password="example_password123",
     role_id=saved_rol.id
   )
-
+  
   user_response = client.post("/v1/users/", json=user.model_dump())
   user_data = UserSummary.model_validate(user_response.json())
-
+  
   assert user_response.status_code == 201
-
+  
   login_data = {
       "username": "example123",
       "password": "example_password123"
     }
-
+  
   login_response = client.post("/v1/auth/token", data=login_data)
   assert login_response.status_code == 202
+
+  return user_data
+
+def test_post_project(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
 
   new_project = ProjectCreate(
     name="Example Project",
@@ -56,229 +66,8 @@ def test_post_project(client: TestClient, session: Session):
   assert project_data.members[0].user == user_data
   assert project_data.members[0].is_leader is True
 
-  assert user_response.status_code == 201
-
-def test_read_projects(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
-  saved_rol = save(session, rol)
-    
-  user = UserCreate(
-    name="example name",
-    last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
-    is_active=True,
-    password="example_password123",
-    role_id=saved_rol.id
-  )
-
-  user_response = client.post("/v1/users/", json=user.model_dump())
-  user_data = UserSummary.model_validate(user_response.json())
-
-  assert user_response.status_code == 201
-
-  login_data = {
-      "username": "example123",
-      "password": "example_password123"
-    }
-
-  login_response = client.post("/v1/auth/token", data=login_data)
-  assert login_response.status_code == 202
-
-  new_project = ProjectCreate(
-    name="Example Project",
-    description="Example description",
-    img="img example",
-    status="Active",
-    created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
-  )
-
-  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
-  assert project_create_response.status_code == 201
-
-  read_project_response = client.get("/v1/projects/")
-
-  assert read_project_response.status_code == 202
-  data = read_project_response.json()
-  assert len(data) > 0
-
-def test_read_project_by_id(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
-  saved_rol = save(session, rol)
-    
-  user = UserCreate(
-    name="example name",
-    last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
-    is_active=True,
-    password="example_password123",
-    role_id=saved_rol.id
-  )
-
-  user_response = client.post("/v1/users/", json=user.model_dump())
-  user_data = UserSummary.model_validate(user_response.json())
-
-  assert user_response.status_code == 201
-
-  login_data = {
-      "username": "example123",
-      "password": "example_password123"
-    }
-
-  login_response = client.post("/v1/auth/token", data=login_data)
-  assert login_response.status_code == 202
-
-  new_project = ProjectCreate(
-    name="Example Project",
-    description="Example description",
-    img="img example",
-    status="Active",
-    created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
-  )
-
-  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
-  assert project_create_response.status_code == 201
-
-  read_project_by_id_response = client.get("/v1/projects/1")
-
-  assert read_project_by_id_response.status_code == 202
-
-  project_data = ProjectResponse.model_validate(read_project_by_id_response.json())
-  assert project_data.id == 1
-  assert project_data.created_by == user_data
-  assert len(project_data.members) == 1
-
-def test_put_project(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
-  saved_rol = save(session, rol)
-    
-  user = UserCreate(
-    name="example name",
-    last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
-    is_active=True,
-    password="example_password123",
-    role_id=saved_rol.id
-  )
-
-  user_response = client.post("/v1/users/", json=user.model_dump())
-  user_data = UserSummary.model_validate(user_response.json())
-
-  assert user_response.status_code == 201
-
-  login_data = {
-      "username": "example123",
-      "password": "example_password123"
-    }
-
-  login_response = client.post("/v1/auth/token", data=login_data)
-  assert login_response.status_code == 202
-
-  new_project = ProjectCreate(
-    name="Example Project",
-    description="Example description",
-    img="img example",
-    status="Active",
-    created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
-  )
-
-  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
-  assert project_create_response.status_code == 201
-
-  updated_project = ProjectUpdate(
-      name="Example Project 2",
-      description="Example description",
-      img="img example",
-      status="Active",
-      created_by_id=user_data.id,
-      created_at=new_project.created_at,
-      ending_date=date(2026, 11, 7)
-    )
-
-  put_project_response = client.put("/v1/projects/1", json=updated_project.model_dump(mode="json"))
-
-  assert put_project_response.status_code == 202
-
-  project_data = ProjectResponse.model_validate(put_project_response.json())
-  assert project_data.name == "Example Project 2"
-  assert project_data.created_by == user_data
-
-def test_delete_project(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
-  saved_rol = save(session, rol)
-    
-  user = UserCreate(
-    name="example name",
-    last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
-    is_active=True,
-    password="example_password123",
-    role_id=saved_rol.id
-  )
-
-  user_response = client.post("/v1/users/", json=user.model_dump())
-  user_data = UserSummary.model_validate(user_response.json())
-
-  assert user_response.status_code == 201
-
-  login_data = {
-      "username": "example123",
-      "password": "example_password123"
-    }
-
-  login_response = client.post("/v1/auth/token", data=login_data)
-  assert login_response.status_code == 202
-
-  new_project = ProjectCreate(
-    name="Example Project",
-    description="Example description",
-    img="img example",
-    status="Active",
-    created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
-  )
-
-  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
-  assert project_create_response.status_code == 201
-
-  delete_project_response = client.delete("/v1/projects/1")
-
-  assert delete_project_response.status_code == 200
-  data = delete_project_response.json()
-  assert data == 1
-
 def test_post_member_to_project(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
-  saved_rol = save(session, rol)
-    
-  user = UserCreate(
-    name="example name",
-    last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
-    is_active=True,
-    password="example_password123",
-    role_id=saved_rol.id
-  )
-
-  user_response = client.post("/v1/users/", json=user.model_dump())
-  user_data = UserSummary.model_validate(user_response.json())
-
-  assert user_response.status_code == 201
-
-  login_data = {
-      "username": "example123",
-      "password": "example_password123"
-    }
-
-  login_response = client.post("/v1/auth/token", data=login_data)
-  assert login_response.status_code == 202
+  user_data = _create_and_login_user(client, session)
 
   new_project = ProjectCreate(
     name="Example Project",
@@ -291,6 +80,9 @@ def test_post_member_to_project(client: TestClient, session: Session):
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
   assert project_create_response.status_code == 201
+
+  rol = Roles(name= "example rol")
+  saved_rol = save(session, rol)
 
   user_2 = UserCreate(
     name="example name 2",
@@ -324,3 +116,102 @@ def test_post_member_to_project(client: TestClient, session: Session):
       "/v1/projects/1/members/", json=new_project_member.model_dump(mode="json")
   )
   assert duplicate_response.status_code == 400
+
+def test_read_projects(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  read_project_response = client.get("/v1/projects/")
+
+  assert read_project_response.status_code == 202
+  data = read_project_response.json()
+  assert len(data) > 0
+
+def test_read_project_by_id(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  read_project_by_id_response = client.get("/v1/projects/1")
+
+  assert read_project_by_id_response.status_code == 202
+
+  project_data = ProjectResponse.model_validate(read_project_by_id_response.json())
+  assert project_data.id == 1
+  assert project_data.created_by == user_data
+  assert len(project_data.members) == 1
+
+def test_put_project(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  updated_project = ProjectUpdate(
+      name="Example Project 2",
+      description="Example description",
+      img="img example",
+      status="Active",
+      created_by_id=user_data.id,
+      created_at=new_project.created_at,
+      ending_date=date(2026, 11, 7)
+    )
+
+  put_project_response = client.put("/v1/projects/1", json=updated_project.model_dump(mode="json"))
+
+  assert put_project_response.status_code == 202
+
+  project_data = ProjectResponse.model_validate(put_project_response.json())
+  assert project_data.name == "Example Project 2"
+  assert project_data.created_by == user_data
+
+def test_delete_project(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  delete_project_response = client.delete("/v1/projects/1")
+
+  assert delete_project_response.status_code == 200
+  data = delete_project_response.json()
+  assert data == 1
