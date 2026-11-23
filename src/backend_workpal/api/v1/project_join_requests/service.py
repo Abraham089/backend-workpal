@@ -65,6 +65,9 @@ class JoinRequestService:
   def update_join_request(self, request_id: int, project_id: int, update_status: ProjectJoinRequestUpdate, session: Session):
     updatable_request = self.read_join_request_by_id(request_id, session)
 
+    if not updatable_request or updatable_request.project_id != project_id:
+      return None
+
     if update_status.status.name == 'ACCEPTED':
       new_member_data = ProjectMemberCreate(
         user_id= updatable_request.user_id
