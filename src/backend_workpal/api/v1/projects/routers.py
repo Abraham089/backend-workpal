@@ -5,10 +5,12 @@ from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
 from ..project_members.models import ProjectMemberResponse
+from ..project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestResponse
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
 from ..project_members.models import ProjectMemberCreate
 from .service import ProjectService
 from ..project_members.service import ProjectMemberService
+from ..project_join_requests.service import JoinRequestService
 from ..auth.service import get_current_user, get_current_project_member_user
 
 router = APIRouter(
@@ -20,6 +22,8 @@ router = APIRouter(
 project_service = ProjectService()
 
 project_member_service = ProjectMemberService()
+
+project_join_request_service = JoinRequestService()
 
 
 @router.get("/", response_model=List[ProjectResponse], status_code=status.HTTP_202_ACCEPTED)
@@ -85,6 +89,23 @@ def add_project_member(
       )
 
   return True
+
+@router.post("/{project_id}/join_request/", response_model=ProjectJoinRequestResponse, status_code=status.HTTP_202_ACCEPTED)
+def create_join_request_to_project(
+  current_user: Annotated[UserResponse, Depends(get_current_user)],
+  project_id: int,
+  new_join_request_data: ProjectJoinRequestCreate,
+  session: Annotated[Session, Depends(get_session)],
+):
+  new_join_request = project_join_request_service.create_join_request(current_user.id, project_id, new_join_request_data, session)
+
+  if not new_join_request:
+      raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"No se pudo crear la solicitud para unirse al proyecto con id {project_id}"
+        )
+
+  return new_join_request
 
 @router.put("/{updated_project_id}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
 def put_project(

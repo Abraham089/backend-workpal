@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import Optional, TYPE_CHECKING
 from datetime import date
 from ..users.models import Users, UserSummary
@@ -22,6 +22,7 @@ class ProjectJoinRequestResponse(ProjectJoinRequestsBase):
 
 class ProjectJoinRequests(ProjectJoinRequestsBase, table=True):
   id: int = Field(default=None, primary_key=True)
+  __table_args__ = (UniqueConstraint("user_id", "project_id"),)
 
   user_id: int = Field(foreign_key="users.id", index=True)
   user: "Users" = Relationship(back_populates="join_requests")
