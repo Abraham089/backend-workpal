@@ -7,23 +7,26 @@ from backend_workpal.api.v1.users.models import UserSummary, UserCreate
 from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse
 from backend_workpal.api.v1.project_members.models import ProjectMemberCreate
+from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate
 
 def _create_and_login_user(
     client: TestClient,
     session: Session,
+    rol: str = "admin",
     username: str = "example123",
     mail: str = "examplemail@gmail.com",
+    password: str ="example_password123",
 ):
-  rol = Roles(name= "admin")
+  rol = Roles(name= rol)
   saved_rol = save(session, rol)
       
   user = UserCreate(
     name="example name",
     last_name="example last name",
-    username="example123",
-    mail="examplemail@gmail.com",
+    username=username,
+    mail=mail,
     is_active=True,
-    password="example_password123",
+    password=password,
     role_id=saved_rol.id
   )
   
@@ -33,7 +36,7 @@ def _create_and_login_user(
   assert user_response.status_code == 201
   
   login_data = {
-      "username": "example123",
+      "username": username,
       "password": "example_password123"
     }
   
@@ -116,6 +119,31 @@ def test_post_member_to_project(client: TestClient, session: Session):
       "/v1/projects/1/members/", json=new_project_member.model_dump(mode="json")
   )
   assert duplicate_response.status_code == 400
+
+def test_post_join_request(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  project_join_request_create = ProjectJoinRequestCreate(message="Example message")
+
+  join_request_response = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
+  assert join_request_response.status_code == 400
+
+  user_data = _create_and_login_user(client, session,rol="Example rol", username="example 2", mail="examplemail2@gmail.com")
+
+  join_request_response = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
+  assert join_request_response.status_code == 202
 
 def test_read_projects(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
