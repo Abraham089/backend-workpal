@@ -145,6 +145,42 @@ def test_post_join_request(client: TestClient, session: Session):
   join_request_response = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
   assert join_request_response.status_code == 202
 
+def test_join_requests_by_project_id(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  project_join_request_create = ProjectJoinRequestCreate(message="Example message")
+
+  user_data = _create_and_login_user(client, session,rol="Example rol", username="example 2", mail="examplemail2@gmail.com")
+
+  join_request_response = client.post("/v1/projects/1/join_request/", json=project_join_request_create.model_dump(mode="json"))
+  assert join_request_response.status_code == 202
+
+  login_data = {
+    "username": "example123",
+    "password": "example_password123"
+  }
+    
+  login_response = client.post("/v1/auth/token", data=login_data)
+  assert login_response.status_code == 202
+
+  join_requests_response = client.get("/v1/projects/1/join_requests/")
+  assert join_requests_response.status_code == 202
+
+  data = join_requests_response.json()
+  assert len(data) > 0
+
 def test_read_projects(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
 
