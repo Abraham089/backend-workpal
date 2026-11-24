@@ -46,7 +46,7 @@ class JoinRequestService:
       session: Session):
     existing_join_request = self.read_join_request_by_user_and_project_id(user_id, project_id, session)
 
-    existing_member = project_member_service.get_member_project_member_by_project_and_user_ids(
+    existing_member = project_member_service.get_project_member_by_project_and_user_ids(
       project_id,
       user_id,
       session
