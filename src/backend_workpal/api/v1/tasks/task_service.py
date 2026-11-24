@@ -1,8 +1,9 @@
 
 from asyncio import Task
 from fastapi import HTTPException
-from src.backend_workpal.api.v1.tasks.models import TaskCreate, TaskUpdate, Tasks
+from backend_workpal.api.v1.tasks.models import TaskCreate, Tasks, TaskUpdate
 from backend_workpal.api.v1.tasks.task_repository import TaskRepository
+
 
 
 class TaskService : 
