@@ -1,67 +1,65 @@
-from sqlmodel import Session, select, col
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from .models import Projects, ProjectCreate, ProjectUpdate
-from ..project_members.models import ProjectMemberCreate
-from ..project_members.service import ProjectMemberService
-from typing import List
+from sqlmodel import Session, select
+
+from backend_workpal.api.v1.project_members.models import ProjectMembers
+from backend_workpal.api.v1.users.models import Users
 from backend_workpal.database.database import save
 
-project_member_service = ProjectMemberService()
+from .models import ProjectCreate, Projects, ProjectUpdate
+
 
 class ProjectService:
-  def read_project_by_id(self, project_id:int, session: Session):
+  def read_project_by_id(self, project_id:int, session: Session)-> Projects | None:
     statement = select(Projects).where(Projects.id == project_id).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
-      joinedload(Projects.members)
-      )
-    project = session.exec(statement).unique().first()
-    
-    return project
+    )
+    return session.exec(statement).first()
 
-  def read_all_projects(self, session: Session):
-    projects = select(Projects).options(
+  def read_all_projects(self, session: Session)->list[Projects]:
+    statement = select(Projects).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
-      joinedload(Projects.members)
-      )
-    return session.exec(projects).unique().all()
-
-  def create_project(self, new_project_data: ProjectCreate, session: Session):
-    new_project = Projects(
-      name=new_project_data.name,
-      description=new_project_data.description,
-      img=new_project_data.img,
-      created_at=new_project_data.created_at,
-      status=new_project_data.status,
-      ending_date=new_project_data.ending_date,
-      created_by_id=new_project_data.created_by_id,
-      supervisor_user_id=new_project_data.supervisor_user_id
     )
+    return list(session.exec(statement).all())
 
-    session.add(new_project)
-    session.flush()
-
-    new_member_data = ProjectMemberCreate(
-      can_edit_project_details= True,
-      can_manage_tasks= True,
-      can_delete_tasks= True,
-      can_invite_members= True,
-      is_leader= True,
-      user_id=new_project_data.created_by_id,
+  def create_project(self, new_project_data: ProjectCreate,created_id:int,  session: Session):
+    if new_project_data.supervisor_user_id is not None and session.get(Users, new_project_data.supervisor_user_id) is None:
+      raise HTTPException(
+        status_code=404,
+        detail=f"No se encontro usuario supervisor con id {new_project_data.supervisor_user_id}",
       )
+      
+    project = Projects.model_validate(new_project_data, update={"created_by_id": created_id})
+    session.add(project)
     
-    new_member = project_member_service.create_project_member(new_project.id, new_member_data, session)
-    
-    if not new_member:
+    try:
+      session.flush()
+      session.add(ProjectMembers(
+        user_id=created_id,
+        project_id=project.id,
+        is_leader=True,
+        can_edit_project_details=True,
+        can_manage_tasks=True,
+        can_delete_tasks=True,
+        can_invite_members=True,
+      ))
+      session.commit()
+      
+    except IntegrityError:
+      
       session.rollback()
-      return None
+      raise HTTPException(status_code=409, detail=f"Ya existe el proyecto {new_project_data.name}") from None
 
-    session.commit()
-    session.refresh(new_project, ["created_by", "supervisor_user", "members"])
-
-    return new_project
-
+    session.refresh(project)
+    return project
+      
+      
+     
+    
+  
   def update_project(self, updated_project_id: int, updated_project: ProjectUpdate, session: Session):
     updatable_project = self.read_project_by_id(updated_project_id, session)
 
@@ -70,6 +68,23 @@ class ProjectService:
 
     project_data = updated_project.model_dump(exclude_unset=True)
 
+    if "name" in project_data:
+      existe_projecto = session.exec(select(Projects).where(Projects.name == project_data["name"])).first()
+      
+      
+    if existe_projecto and existe_projecto.id != updatable_project :
+      raise HTTPException(
+        status_code=409,
+        detail=f"Ya existe el projecto {project_data['name']}"
+      )
+      
+    if project_data.get('supervisor_user_id') is not None and not session.get(Users, project_data["supervisor_user_id"]):
+      
+      raise HTTPException(
+        status_code= 404,
+        detail= f'No se encontro usuario  supervisor con el id {project_data['supervisor_user_id']}'
+      )
+    
     updatable_project.sqlmodel_update(project_data)
 
     saved_project = save(session, updatable_project)
@@ -88,4 +103,22 @@ class ProjectService:
     session.commit()
 
     return delete_project_id
+  
+  def user_can_edit (self,project : Projects,user_id : int, session : Session)-> bool : 
+    if project.created_by_id == user_id:
+      return True
+    
+    statement = select(ProjectMembers).where(
+      ProjectMembers.project_id == project.id,
+      ProjectMembers.user_id == user_id
+    )
+    member = session.exec(statement).first()
+    
+    if not member:
+      return False
+
+    if member.is_leader or member.can_edit_project_details:
+      return True
+
+    return False
   

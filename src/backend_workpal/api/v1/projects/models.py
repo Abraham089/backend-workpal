@@ -1,31 +1,43 @@
 from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List, Optional
 from datetime import date
-
-from ..users.models import UserSummary
-from ..comments.models import CommentResponse
+from ..users.models import  UserSummary, Users
+from enum import Enum
+from pydantic import FutureDate
 
 if TYPE_CHECKING:
-  from ..users.models import Users
   from ..tasks.models import Tasks
   from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
   from ..project_join_requests.models import ProjectJoinRequests
 
+
+class ProjectStatus(str, Enum):
+  ACTIVE = "Active"
+  PAUSED = "Paused"
+  FINISHED = "Finished"
+  
 class ProjectsBase(SQLModel):
   name: str = Field(unique=True, max_length=40)
   description: str = Field(max_length=200, sa_type=String(200))
   img: str
   created_at: date = Field(default_factory=lambda: date.today())
-  status: str = Field(max_length=15, sa_type=String(15))
+  status: ProjectStatus = Field( sa_type=String(15))
   ending_date: date
+  
+  
 
 class ProjectCreate(ProjectsBase):
-  created_by_id: int
+  ending_date: FutureDate
   supervisor_user_id: Optional[int] = None
+  
 
-class ProjectUpdate(ProjectsBase):
-  created_by_id: int
+class ProjectUpdate(SQLModel):
+  name: Optional[str] = Field(default=None, max_length=40)
+  description: Optional[str] = Field(default=None, max_length=200)
+  img: Optional[str] = None
+  status: Optional[ProjectStatus] = None
+  ending_date: Optional[date] = None
   supervisor_user_id: Optional[int] = None
 
 class ProjectResponse(ProjectsBase):
@@ -52,21 +64,13 @@ class Projects(ProjectsBase, table=True):
     sa_relationship_kwargs={"foreign_keys": "[Projects.supervisor_user_id]"}
     )
 
-  members: List["ProjectMembers"] = Relationship(
-    back_populates="project",
-    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    )
+  members: List["ProjectMembers"] = Relationship(back_populates="project", cascade_delete=True)
 
-  tasks: List["Tasks"] = Relationship(
-    back_populates="project",
-    sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+  tasks: List["Tasks"] = Relationship(back_populates="project", cascade_delete=True)
 
-  comments: List["Comments"] = Relationship(
-    back_populates="project",
-    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
-    )
-  
+  comments: List["Comments"] = Relationship(back_populates="project", cascade_delete=True)
+
   join_requests: List["ProjectJoinRequests"] = Relationship(
-      back_populates="project",
-      sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    back_populates="project",
+    cascade_delete=True
   )

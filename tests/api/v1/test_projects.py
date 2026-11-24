@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 from backend_workpal.database.database import save
@@ -9,15 +9,17 @@ from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, Proj
 from backend_workpal.api.v1.project_members.models import ProjectMemberCreate, ProjectMemberResponse, ProjectMemberUpdate
 from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestUpdate, JoinRequestStatus
 
+ENDING_DATE = date.today() + timedelta(days=30)
+
 def _create_and_login_user(
     client: TestClient,
     session: Session,
     rol: str = "admin",
     username: str = "example123",
     mail: str = "examplemail@gmail.com",
-    password: str ="example_password123",
+    password: str = "example_password123",
 ):
-  rol = Roles(name= rol)
+  rol = Roles(name=rol)
   saved_rol = save(session, rol)
       
   user = UserCreate(
@@ -37,7 +39,7 @@ def _create_and_login_user(
   
   login_data = {
       "username": username,
-      "password": "example_password123"
+      "password": password
     }
   
   login_response = client.post("/v1/auth/token", data=login_data)
@@ -54,7 +56,7 @@ def test_post_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -78,7 +80,7 @@ def test_post_member_to_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -129,7 +131,7 @@ def test_post_join_request(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -154,7 +156,7 @@ def test_read_join_requests_by_project_id(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -190,7 +192,7 @@ def test_read_projects(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -211,7 +213,7 @@ def test_read_project_by_id(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -235,7 +237,7 @@ def test_read_all_project_members_in_project(client: TestClient, session: Sessio
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
   
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -269,7 +271,7 @@ def test_read_project_member_by_project_and_member_id(client: TestClient, sessio
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
     
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -303,7 +305,7 @@ def test_put_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -316,7 +318,7 @@ def test_put_project(client: TestClient, session: Session):
       status="Active",
       created_by_id=user_data.id,
       created_at=new_project.created_at,
-      ending_date=date(2026, 11, 7)
+      ending_date=ENDING_DATE
     )
 
   put_project_response = client.put("/v1/projects/1", json=updated_project.model_dump(mode="json"))
@@ -336,7 +338,7 @@ def test_put_project_member(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
   
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -397,7 +399,7 @@ def test_update_project_join_request(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -464,7 +466,7 @@ def test_delete_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))

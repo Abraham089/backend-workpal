@@ -5,7 +5,7 @@ from datetime import date
 if TYPE_CHECKING:
   from ..users.models import Users
   from ..projects.models import Projects
-  from ..projects.models import Tasks
+  from ..tasks.models import Tasks
 
 class CommentsBase(SQLModel):
   content: str = Field(max_length=50, sa_type=String(50))
