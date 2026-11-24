@@ -36,7 +36,7 @@ def get_all_projects(
   return projects
 
 @router.get("/{id_project}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
-def get_all_projects(
+def get_project_by_id(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
   id_project: int,
   session: Annotated[Session, Depends(get_session)],
@@ -61,6 +61,17 @@ def get_join_requests_by_project_id(
 
   return join_requests
 
+@router.get("/{project_id}/project_members", response_model=List[ProjectMemberResponse], status_code=status.HTTP_200_OK)
+def get_project_members_by_project_id(
+  current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
+  project_id: int,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  project_members = project_member_service.get_project_members_by_project_id(project_id, session)
+
+  return project_members
+
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
@@ -79,7 +90,7 @@ def create_project(
   return created_project
 
 @router.post("/{project_id}/members/", response_model=bool, status_code=status.HTTP_201_CREATED)
-def add_project_member(
+def create_project_member(
   current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
   project_id: int,
   new_member_data: ProjectMemberCreate,
