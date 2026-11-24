@@ -1,12 +1,12 @@
 from sqlmodel import SQLModel, Field, Relationship, String
 from typing import TYPE_CHECKING, List, Optional
 from datetime import date
-from ..users.models import UserResponse
+from ..users.models import UserResponse, Users
 from enum import Enum
 from pydantic import FutureDate,field_validator,model_validator
 
 if TYPE_CHECKING:
-  from ..users.models import Users
+  from ..users.models import UserSummary
   from ..tasks.models import Tasks
   from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
