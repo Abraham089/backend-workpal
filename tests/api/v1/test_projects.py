@@ -386,6 +386,8 @@ def test_put_project_member(client: TestClient, session: Session):
   new_project_member_data = ProjectMemberResponse.model_validate(data)
   assert data == new_project_member_data.model_dump(mode="json")
 
+  assert new_project_member_data.can_edit_project_details == new_member_data.can_edit_project_details
+
 def test_update_project_join_request(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
 
