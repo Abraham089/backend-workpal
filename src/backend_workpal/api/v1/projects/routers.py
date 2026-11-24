@@ -26,7 +26,7 @@ def get_all_projects(
   return projects
 
 @router.get("/{id_project}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
-def get_all_projects(
+def get_projects_by_id(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
   id_project: int,
   session: Annotated[Session, Depends(get_session)],
@@ -47,7 +47,8 @@ def create_project(
   session: Annotated[Session, Depends(get_session)],
   ):
 
-  created_project = project_service.create_project(new_project_data, session)
+  created_project = project_service.create_project(new_project_data,current_user.id, session)
+  
 
   if not created_project:
     raise HTTPException(
@@ -65,15 +66,23 @@ def put_project(
   session: Annotated[Session, Depends(get_session)],
   ):
   
-  project_updated = project_service.update_project(updated_project_id, updated_project, session)
+  project_updated = project_service.read_project_by_id(updated_project_id, session)
 
   if not project_updated:
     raise HTTPException(
       status_code=status.HTTP_404_NOT_FOUND,
       detail=f"No se encontro proyecto con id {updated_project_id} para editar"
       )
+    
+  if not project_service.user_can_edit(project_updated,current_user.id, session):
+    raise HTTPException(
+      status_code=404,
+      detail="No tiene permisos para modificar el projecto"
+    )
+    
+  project = project_service.update_project(updated_project_id, updated_project, session)
 
-  return project_updated
+  return project
 
 @router.delete("/{delete_project_id}", status_code=status.HTTP_200_OK)
 def delete_project(
@@ -82,12 +91,20 @@ def delete_project(
   session: Annotated[Session, Depends(get_session)],
 ):
 
-  deleted_project = project_service.delete_project(delete_project_id, session)
+  deleted_project = project_service.read_project_by_id(delete_project_id, session)
 
   if not deleted_project:
     raise HTTPException(
       status_code=status.HTTP_404_NOT_FOUND,
       detail=f"No se encontro proyecto con id {delete_project_id}"
       )
+    
+  if not project_service.user_can_edit(deleted_project, current_user.id, session):
+    raise HTTPException(
+      status_code=403,
+      detail="No tienes permiso para eliminar este proyecto"
+      )
+    
+  project = project_service.delete_project(delete_project_id, session)
   
-  return deleted_project
+  return project
