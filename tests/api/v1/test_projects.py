@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 from backend_workpal.database.database import save
@@ -7,6 +7,8 @@ from backend_workpal.api.v1.users.models import UserResponse, UserCreate
 from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate
 from backend_workpal.core.security import get_password_hash
+
+ENDING_DATE = date.today() + timedelta(days=30)
 
 def test_post_project(client: TestClient, session: Session):
   rol = Roles(name= "admin")
@@ -41,7 +43,7 @@ def test_post_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -56,7 +58,7 @@ def test_post_project(client: TestClient, session: Session):
     "created_by": user_data.model_dump(),
     "supervisor_user": None,
     "created_at": date.today().isoformat(),
-    "ending_date": date(2026, 11, 7).isoformat(),
+    "ending_date": ENDING_DATE.isoformat(),
   }
 
 def test_read_projects(client: TestClient, session: Session):
@@ -92,7 +94,7 @@ def test_read_projects(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -137,7 +139,7 @@ def test_read_project_by_id(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -156,7 +158,7 @@ def test_read_project_by_id(client: TestClient, session: Session):
     "created_by": user_data.model_dump(),
     "supervisor_user": None,
     "created_at": date.today().isoformat(),
-    "ending_date": date(2026, 11, 7).isoformat(),
+    "ending_date": ENDING_DATE.isoformat(),
   }
 
 def test_put_project(client: TestClient, session: Session):
@@ -192,7 +194,7 @@ def test_put_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -205,7 +207,7 @@ def test_put_project(client: TestClient, session: Session):
       status="Active",
       created_by_id=user_data.id,
       created_at=new_project.created_at,
-      ending_date=date(2026, 11, 7)
+      ending_date=ENDING_DATE
     )
 
   put_project_response = client.put("/v1/projects/1", json=updated_project.model_dump(mode="json"))
@@ -221,7 +223,7 @@ def test_put_project(client: TestClient, session: Session):
     "created_by": user_data.model_dump(),
     "supervisor_user": None,
     "created_at": new_project.created_at.isoformat(),
-    "ending_date": date(2026, 11, 7).isoformat(),
+    "ending_date": ENDING_DATE.isoformat(),
   }
 
 def test_delete_project(client: TestClient, session: Session):
@@ -257,7 +259,7 @@ def test_delete_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
