@@ -6,7 +6,7 @@ from backend_workpal.database.database import save
 from backend_workpal.api.v1.users.models import UserSummary, UserCreate
 from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse, ProjectSummary
-from backend_workpal.api.v1.project_members.models import ProjectMemberCreate, ProjectMemberResponse
+from backend_workpal.api.v1.project_members.models import ProjectMemberCreate, ProjectMemberResponse, ProjectMemberUpdate
 from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestUpdate, JoinRequestStatus
 
 def _create_and_login_user(
@@ -326,6 +326,65 @@ def test_put_project(client: TestClient, session: Session):
   project_data = ProjectResponse.model_validate(put_project_response.json())
   assert project_data.name == "Example Project 2"
   assert project_data.created_by == user_data
+
+def test_put_project_member(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+  
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+  
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+  
+  rol = Roles(name= "example rol")
+  saved_rol = save(session, rol)
+  
+  user_2 = UserCreate(
+    name="example name 2",
+    last_name="example last name 2",
+    username="example1234",
+    mail="examplemail2@gmail.com",
+    is_active=True,
+    password="example_password123",
+    role_id=saved_rol.id
+  )
+    
+  user_2_response = client.post("/v1/users/", json=user_2.model_dump())
+  user_2_data = UserSummary.model_validate(user_2_response.json())
+  
+  assert user_2_response.status_code == 201
+  
+  new_project_member = ProjectMemberCreate(
+    can_edit_project_details= False,
+    can_manage_tasks= True,
+    can_delete_tasks= False,
+    can_invite_members= False,
+    is_leader= False,
+    user_id= user_2_data.id
+  )
+  
+  project_member_response = client.post("/v1/projects/1/members/", json=new_project_member.model_dump(mode="json"))
+  assert project_member_response.status_code == 201
+
+  new_member_data = ProjectMemberUpdate(
+    can_delete_tasks=True,
+    can_edit_project_details=True,
+    can_invite_members=False,
+    can_manage_tasks=True
+  )
+
+  project_member_response = client.put("/v1/projects/1/project_member/2/", json=new_member_data.model_dump(mode="json"))
+  assert project_member_response.status_code == 202
+
+  data = project_member_response.json()
+  new_project_member_data = ProjectMemberResponse.model_validate(data)
+  assert data == new_project_member_data.model_dump(mode="json")
 
 def test_update_project_join_request(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
