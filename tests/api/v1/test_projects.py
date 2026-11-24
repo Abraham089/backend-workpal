@@ -243,7 +243,7 @@ def test_read_all_project_members_in_project(client: TestClient, session: Sessio
 
   project_summary = ProjectSummary.model_validate(project_create_response.json())
 
-  project_members_response = client.get("/v1/projects/1/project_members")
+  project_members_response = client.get("/v1/projects/1/project_members/")
   assert project_members_response.status_code == 200
 
   new_member_data = ProjectMemberResponse(
@@ -259,7 +259,40 @@ def test_read_all_project_members_in_project(client: TestClient, session: Sessio
 
   data = project_members_response.json()
   assert data == [new_member_data.model_dump(mode="json")]
-  
+
+def test_read_project_member_by_project_and_member_id(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+    
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=date(2026, 11, 7)
+  )
+    
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+
+  project_summary = ProjectSummary.model_validate(project_create_response.json())
+
+  project_member_response = client.get("/v1/projects/1/project_member/1")
+  assert project_member_response.status_code == 200
+
+  new_member_data = ProjectMemberResponse(
+    id=1,
+    can_edit_project_details= True,
+    can_manage_tasks= True,
+    can_delete_tasks= True,
+    can_invite_members= True,
+    is_leader= True,
+    user=user_data,
+    project=project_summary
+  )
+
+  data = project_member_response.json()
+  assert data == new_member_data.model_dump(mode="json")
 
 def test_put_project(client: TestClient, session: Session):
   user_data = _create_and_login_user(client, session)
