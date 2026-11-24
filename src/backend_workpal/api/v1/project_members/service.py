@@ -28,11 +28,15 @@ class ProjectMemberService:
     ):
 
     existing_member = session.exec(
-      select(ProjectMembers).where(
+      select(ProjectMembers).options(
+        joinedload(ProjectMembers.user),
+        joinedload(ProjectMembers.project)
+      ).where(
         ProjectMembers.project_id == project_id,
         ProjectMembers.user_id == member_id,
         )
       ).first()
+    
     return existing_member
 
   def create_project_member(

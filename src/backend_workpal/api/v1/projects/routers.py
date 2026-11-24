@@ -61,7 +61,7 @@ def get_join_requests_by_project_id(
 
   return join_requests
 
-@router.get("/{project_id}/project_members", response_model=List[ProjectMemberResponse], status_code=status.HTTP_200_OK)
+@router.get("/{project_id}/project_members/", response_model=List[ProjectMemberResponse], status_code=status.HTTP_200_OK)
 def get_project_members_by_project_id(
   current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
   project_id: int,
@@ -71,6 +71,24 @@ def get_project_members_by_project_id(
   project_members = project_member_service.get_project_members_by_project_id(project_id, session)
 
   return project_members
+
+@router.get("/{project_id}/project_member/{member_id}/", response_model=ProjectMemberResponse, status_code=status.HTTP_200_OK)
+def get_project_member_by_project_and_member_id(
+  current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
+  project_id: int,
+  member_id: int,
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  project_member = project_member_service.get_project_member_by_project_and_user_ids(project_id, member_id, session)
+
+  if not project_member:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"No se encontro al usuario con id {member_id} en el proyecto con id {project_id}"
+      )
+
+  return project_member
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
