@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status, Cookie
-from sqlmodel import Session
+from sqlmodel import Session, select
 import urllib.parse
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -9,6 +9,8 @@ from backend_workpal.core.security import verify_password, DUMMY_HASH
 from backend_workpal.core.config import settings
 from .models import TokenData
 from ..users.service import UserService
+from ..users.models import UserResponse
+from ..project_members.models import ProjectMembers
 from backend_workpal.database.database import get_session
 
 user_service = UserService()
@@ -33,8 +35,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 def get_current_user(session: Annotated[Session, Depends(get_session)], access_token: Annotated[str | None, Cookie()] = None):
     credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate crerdentials"
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate crerdentials"
     )
     if not access_token:
        raise credentials_exception
@@ -58,3 +60,31 @@ def get_current_user(session: Annotated[Session, Depends(get_session)], access_t
     if user is None:
         raise credentials_exception
     return user
+
+def get_current_project_member_user(
+      session: Annotated[Session, Depends(get_session)],
+      current_user: Annotated[UserResponse, Depends(get_current_user)],
+      project_id: int
+      ):
+    statement = select(ProjectMembers).where(
+        ProjectMembers.user_id == current_user.id,
+        ProjectMembers.project_id == project_id
+        )
+    user_member = session.exec(statement).first()
+
+    if not user_member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This user is not in a project"
+        )
+
+    return user_member
+
+def get_add_member_user(
+      current_member: Annotated[ProjectMembers, Depends(get_current_project_member_user)]
+    ):
+    if not current_member.can_invite_members:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This user dont have rights to add users")
+    return current_member

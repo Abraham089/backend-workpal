@@ -11,6 +11,8 @@ from backend_workpal.api.v1.roles.models import Roles
 from backend_workpal.api.v1.project_members.models import ProjectMembers
 from backend_workpal.api.v1.institutions.models import Institutions
 from backend_workpal.api.v1.institution_with_user.models import InstitutionWithUser
+from backend_workpal.api.v1.comments.models import Comments
+from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequests
 
 def test_create_things_in_db(session: Session):
   rol = Roles(name= "admin")

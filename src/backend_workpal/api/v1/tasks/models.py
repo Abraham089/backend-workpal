@@ -7,6 +7,7 @@ if TYPE_CHECKING:
   from ..projects.models import Projects
   from ..users.models import Users
   from ..skills.models import Skills
+  from ..comments.models import Comments
 
 class TasksBase(SQLModel):
   name: str = Field(max_length=40, sa_type=String(40))

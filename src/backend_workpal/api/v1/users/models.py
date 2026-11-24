@@ -6,12 +6,12 @@ from ..institution_with_user.models import InstitutionWithUser
 
 if TYPE_CHECKING:
   from ..roles.models import Roles
-  from ..projects.models import Projects
+  from ..projects.models import Projects, ProjectSummary
   from ..tasks.models import Tasks
-  from ..project_members.models import ProjectMembers
+  from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
   from ..institutions.models import Institutions
-
+  from ..project_join_requests.models import ProjectJoinRequests
 
 class UsersBase(SQLModel):
   enrollment: str | None = Field(default=None, unique=True)
@@ -24,6 +24,11 @@ class UsersBase(SQLModel):
 class UserResponse(UsersBase):
   id: int
   role: RolesResponse
+  created_projects: List["ProjectSummary"]
+  project_memberships: List["ProjectMemberResponse"]
+
+class UserSummary(UsersBase):
+  id: int
 
 class UserCreate(UsersBase):
   password: str
@@ -53,3 +58,8 @@ class Users(UsersBase, table=True):
   comments: List["Comments"] = Relationship(back_populates="author")
 
   institutions: List["Institutions"] = Relationship(back_populates="users", link_model=InstitutionWithUser)
+
+  join_requests: List["ProjectJoinRequests"] = Relationship(
+    back_populates="user",
+    sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+  )

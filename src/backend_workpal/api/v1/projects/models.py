@@ -8,8 +8,9 @@ from pydantic import FutureDate,field_validator,model_validator
 if TYPE_CHECKING:
   from ..users.models import Users
   from ..tasks.models import Tasks
-  from ..project_members.models import ProjectMembers
+  from ..project_members.models import ProjectMembers, ProjectMemberResponse
   from ..comments.models import Comments
+  from ..project_join_requests.models import ProjectJoinRequests
 
 
 class ProjectStatus(str, Enum):
@@ -42,8 +43,12 @@ class ProjectUpdate(SQLModel):
 
 class ProjectResponse(ProjectsBase):
   id: int
-  created_by: UserResponse
-  supervisor_user: Optional[UserResponse] = None
+  created_by: UserSummary
+  supervisor_user: Optional[UserSummary] = None
+  members: List["ProjectMemberResponse"]
+
+class ProjectSummary(ProjectsBase):
+  id: int
 
 class Projects(ProjectsBase, table=True):
   id: int = Field(default=None, primary_key=True)

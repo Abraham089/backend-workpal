@@ -74,7 +74,9 @@ def test_get_user_by_id(client: TestClient, session: Session):
     "role": {
       "id": 1,
       "name": "admin"
-    }
+    },
+    "created_projects": [],
+    "project_memberships": []
   }
 
 def test_post_user(client: TestClient, session: Session):
@@ -106,7 +108,9 @@ def test_post_user(client: TestClient, session: Session):
     "role": {
       "id": 1,
       "name": "admin"
-    }
+    },
+    "created_projects": [],
+    "project_memberships": []
   }
 
   login_data = {
