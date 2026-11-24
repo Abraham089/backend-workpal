@@ -18,6 +18,12 @@ class ProjectMembersBase(SQLModel):
 class ProjectMemberCreate(ProjectMembersBase):
   user_id: int
 
+class ProjectMemberUpdate(SQLModel):
+  can_edit_project_details: bool
+  can_manage_tasks: bool
+  can_delete_tasks: bool
+  can_invite_members: bool
+
 class ProjectMemberResponse(ProjectMembersBase):
   id: int
   user: "UserSummary"

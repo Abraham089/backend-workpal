@@ -1,6 +1,6 @@
 from sqlmodel import Session, select, col
 from sqlalchemy.orm import joinedload
-from .models import ProjectMembers, ProjectMemberCreate
+from .models import ProjectMembers, ProjectMemberCreate, ProjectMemberUpdate
 from typing import List
 from backend_workpal.database.database import save
 
@@ -64,4 +64,21 @@ class ProjectMemberService:
     saved_project_member = save(session, new_project_member)
 
     return saved_project_member
+
+  def update_project_member(
+      self,
+      update_data: ProjectMemberUpdate,
+      updatable_member: ProjectMembers,
+      session: Session
+      ):
+    
+    update_member_data = update_data.model_dump(exclude_unset=True)
+
+    updatable_member.sqlmodel_update(update_member_data)
+
+    saved_member = save(session, updatable_member)
+
+    session.refresh(saved_member, ["user", "project"])
+
+    return saved_member
   

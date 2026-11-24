@@ -4,7 +4,7 @@ from starlette import status
 from typing import Annotated, List
 from backend_workpal.database.database import get_session
 from ..users.models import UserResponse
-from ..project_members.models import ProjectMemberResponse
+from ..project_members.models import ProjectMemberResponse, ProjectMemberUpdate
 from ..project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestResponse, ProjectJoinRequestUpdate
 from ..project_members.models import ProjectMembers
 from .models import ProjectCreate, ProjectResponse, ProjectUpdate
@@ -149,7 +149,7 @@ def create_join_request_to_project(
   return new_join_request
 
 @router.put("/{updated_project_id}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
-def put_project(
+def update_project(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
   updated_project_id: int,
   updated_project: ProjectUpdate,
@@ -184,6 +184,39 @@ def update_project_join_request(
       )
   
   return updated_join_request
+
+@router.put("/{project_id}/project_member/{member_id}/", response_model= ProjectMemberResponse, status_code=status.HTTP_202_ACCEPTED)
+def update_project_member(
+  project_id: int,
+  member_id: int,
+  update_data: ProjectMemberUpdate,
+  current_member: Annotated[ProjectMembers, Depends(get_add_member_user)],
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  updatable_member = project_member_service.get_project_member_by_project_and_user_ids(project_id, member_id, session)
+
+  if not updatable_member:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"No se encontro el usuario con id {member_id} en el proyecto con id {project_id}")
+  
+  if updatable_member.is_leader:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede editar al lider del proyecto")
+
+  if updatable_member.id == current_member.id:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No puedes editar tus propios permisos")
+
+  if not current_member.is_leader:
+    if updatable_member.can_invite_members:
+      raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el lider puede editar a los usuarios con permisos de invitar usuarios")
+    if update_data.can_invite_members:
+      raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el lider puede dar permisos de invitar usuarios")
+
+  updated_member = project_member_service.update_project_member(update_data, updatable_member, session)
+
+  if not updated_member:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fue posinle editar al miembro")
+  
+  return updated_member
 
 @router.delete("/{delete_project_id}", status_code=status.HTTP_200_OK)
 def delete_project(
