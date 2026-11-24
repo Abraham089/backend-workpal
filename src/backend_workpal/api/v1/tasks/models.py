@@ -39,4 +39,6 @@ class Tasks(TasksBase, table=True):
   assigned_user: Optional["Users"] = Relationship(back_populates="tasks")
 
   skills: List["Skills"] = Relationship(back_populates="tasks", link_model=TaskWithSkill)
+
+  comments: List["Comments"] = Relationship(back_populates="task")
   

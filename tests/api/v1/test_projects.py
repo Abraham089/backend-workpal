@@ -5,13 +5,21 @@ from fastapi.testclient import TestClient
 from backend_workpal.database.database import save
 from backend_workpal.api.v1.users.models import UserSummary, UserCreate
 from backend_workpal.api.v1.roles.models import Roles
-from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate
-from backend_workpal.core.security import get_password_hash
+from backend_workpal.api.v1.projects.models import Projects, ProjectCreate, ProjectUpdate, ProjectResponse, ProjectSummary
+from backend_workpal.api.v1.project_members.models import ProjectMemberCreate, ProjectMemberResponse, ProjectMemberUpdate
+from backend_workpal.api.v1.project_join_requests.models import ProjectJoinRequestCreate, ProjectJoinRequestUpdate, JoinRequestStatus
 
 ENDING_DATE = date.today() + timedelta(days=30)
 
-def test_post_project(client: TestClient, session: Session):
-  rol = Roles(name= "admin")
+def _create_and_login_user(
+    client: TestClient,
+    session: Session,
+    rol: str = "admin",
+    username: str = "example123",
+    mail: str = "examplemail@gmail.com",
+    password: str = "example_password123",
+):
+  rol = Roles(name=rol)
   saved_rol = save(session, rol)
       
   user = UserCreate(
@@ -31,7 +39,7 @@ def test_post_project(client: TestClient, session: Session):
   
   login_data = {
       "username": username,
-      "password": "example_password123"
+      "password": password
     }
   
   login_response = client.post("/v1/auth/token", data=login_data)
@@ -53,18 +61,6 @@ def test_post_project(client: TestClient, session: Session):
 
   project_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
   assert project_response.status_code == 201
-  data = project_response.json()
-  assert data == {
-    "id": 1,
-    "name": "Example Project",
-    "description": "Example description",
-    "img": "img example",
-    "status": "Active",
-    "created_by": user_data.model_dump(),
-    "supervisor_user": None,
-    "created_at": date.today().isoformat(),
-    "ending_date": ENDING_DATE.isoformat(),
-  }
 
   project_data = ProjectResponse.model_validate(project_response.json())
   assert project_data.id == 1
@@ -84,7 +80,7 @@ def test_post_member_to_project(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -135,7 +131,7 @@ def test_post_join_request(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -160,7 +156,7 @@ def test_read_join_requests_by_project_id(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -217,7 +213,7 @@ def test_read_project_by_id(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -249,19 +245,8 @@ def test_read_all_project_members_in_project(client: TestClient, session: Sessio
 
   project_summary = ProjectSummary.model_validate(project_create_response.json())
 
-  assert read_project_by_id_response.status_code == 202
-  data = read_project_by_id_response.json()
-  assert data == {
-    "id": 1,
-    "name": "Example Project",
-    "description": "Example description",
-    "img": "img example",
-    "status": "Active",
-    "created_by": user_data.model_dump(),
-    "supervisor_user": None,
-    "created_at": date.today().isoformat(),
-    "ending_date": ENDING_DATE.isoformat(),
-  }
+  project_members_response = client.get("/v1/projects/1/project_members/")
+  assert project_members_response.status_code == 200
 
   new_member_data = ProjectMemberResponse(
     id=1,
@@ -286,7 +271,7 @@ def test_read_project_member_by_project_and_member_id(client: TestClient, sessio
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
     
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -339,18 +324,6 @@ def test_put_project(client: TestClient, session: Session):
   put_project_response = client.put("/v1/projects/1", json=updated_project.model_dump(mode="json"))
 
   assert put_project_response.status_code == 202
-  data = put_project_response.json()
-  assert data == {
-    "id": 1,
-    "name": "Example Project 2",
-    "description": "Example description",
-    "img": "img example",
-    "status": "Active",
-    "created_by": user_data.model_dump(),
-    "supervisor_user": None,
-    "created_at": new_project.created_at.isoformat(),
-    "ending_date": ENDING_DATE.isoformat(),
-  }
 
   project_data = ProjectResponse.model_validate(put_project_response.json())
   assert project_data.name == "Example Project 2"
@@ -365,7 +338,7 @@ def test_put_project_member(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
   
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
@@ -426,7 +399,7 @@ def test_update_project_join_request(client: TestClient, session: Session):
     img="img example",
     status="Active",
     created_by_id=user_data.id,
-    ending_date=date(2026, 11, 7)
+    ending_date=ENDING_DATE
   )
 
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))

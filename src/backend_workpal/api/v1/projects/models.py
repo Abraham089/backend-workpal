@@ -69,3 +69,8 @@ class Projects(ProjectsBase, table=True):
   tasks: List["Tasks"] = Relationship(back_populates="project", cascade_delete=True)
 
   comments: List["Comments"] = Relationship(back_populates="project", cascade_delete=True)
+
+  join_requests: List["ProjectJoinRequests"] = Relationship(
+    back_populates="project",
+    cascade_delete=True
+  )
