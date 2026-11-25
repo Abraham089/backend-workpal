@@ -15,15 +15,17 @@ class ProjectService:
     statement = select(Projects).where(Projects.id == project_id).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
+      joinedload(Projects.members),
     )
-    return session.exec(statement).first()
+    return session.exec(statement).unique().first()
 
   def read_all_projects(self, session: Session)->list[Projects]:
     statement = select(Projects).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
+      joinedload(Projects.members),
     )
-    return list(session.exec(statement).all())
+    return list(session.exec(statement).unique().all())
 
   def create_project(self, new_project_data: ProjectCreate,created_id:int,  session: Session):
     if new_project_data.supervisor_user_id is not None and session.get(Users, new_project_data.supervisor_user_id) is None:
@@ -53,12 +55,8 @@ class ProjectService:
       session.rollback()
       raise HTTPException(status_code=409, detail=f"Ya existe el proyecto {new_project_data.name}") from None
 
-    session.refresh(project)
+    session.refresh(project, ["created_by", "supervisor_user", "members"])
     return project
-      
-      
-     
-    
   
   def update_project(self, updated_project_id: int, updated_project: ProjectUpdate, session: Session):
     updatable_project = self.read_project_by_id(updated_project_id, session)
