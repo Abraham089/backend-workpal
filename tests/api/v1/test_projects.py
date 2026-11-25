@@ -480,7 +480,7 @@ def test_delete_project(client: TestClient, session: Session):
 
   delete_project_response = client.delete("/v1/projects/999")
   
-  assert delete_project_response.status_code == 200
+  assert delete_project_response.status_code == 404
 
   delete_project_response = client.delete("/v1/projects/1")
 
