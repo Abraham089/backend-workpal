@@ -478,6 +478,10 @@ def test_delete_project(client: TestClient, session: Session):
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
   assert project_create_response.status_code == 201
 
+  delete_project_response = client.delete("/v1/projects/999")
+  
+  assert delete_project_response.status_code == 200
+
   delete_project_response = client.delete("/v1/projects/1")
 
   assert delete_project_response.status_code == 200
