@@ -381,6 +381,12 @@ def test_put_project_member(client: TestClient, session: Session):
     can_manage_tasks=True
   )
 
+  project_member_response = client.put("/v1/projects/1/project_member/1/", json=new_member_data.model_dump(mode="json"))
+  assert project_member_response.status_code == 403
+
+  project_member_response = client.put("/v1/projects/1/project_member/999/", json=new_member_data.model_dump(mode="json"))
+  assert project_member_response.status_code == 404
+
   project_member_response = client.put("/v1/projects/1/project_member/2/", json=new_member_data.model_dump(mode="json"))
   assert project_member_response.status_code == 202
 
@@ -530,6 +536,9 @@ def test_delete_project_member(client: TestClient, session: Session):
       
   login_response = client.post("/v1/auth/token", data=login_data)
   assert login_response.status_code == 202
+
+  project_member_delete_response = client.delete("/v1/projects/1/project_member/999")
+  assert project_member_delete_response.status_code == 404
 
   project_member_delete_response = client.delete("/v1/projects/1/project_member/1")
   assert project_member_delete_response.status_code == 403
