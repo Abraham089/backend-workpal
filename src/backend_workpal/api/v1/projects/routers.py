@@ -268,7 +268,7 @@ def delete_project_member(
   if deletable_member.is_leader:
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede eliminar al lider del proyecto")
 
-  if not current_member.is_leader & (deletable_member.can_invite_members & deletable_member.id != current_member.id) :
+  if not current_member.is_leader and (deletable_member.can_invite_members and deletable_member.id != current_member.id) :
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el lider puede eliminar a los usuarios con permisos de invitar usuarios")
 
   deleted_member = project_member_service.delete_project_member(deletable_member, session)
