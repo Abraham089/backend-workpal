@@ -167,7 +167,7 @@ def update_project(
     
   if not project_service.user_can_edit(project_updated,current_user.id, session):
     raise HTTPException(
-      status_code=404,
+      status_code=status.HTTP_404_NOT_FOUND,
       detail="No tiene permisos para modificar el projecto"
     )
     
@@ -244,7 +244,7 @@ def delete_project(
     
   if not project_service.user_can_edit(deleted_project, current_user.id, session):
     raise HTTPException(
-      status_code=403,
+      status_code=status.HTTP_403_FORBIDDEN,
       detail="No tienes permiso para eliminar este proyecto"
       )
     
