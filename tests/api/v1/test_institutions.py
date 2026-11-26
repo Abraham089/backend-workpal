@@ -67,4 +67,62 @@ def test_post_institution(client: TestClient, session: Session):
 
   new_institution_response = client.post("/v1/institutions/", json=new_institution.model_dump(mode="json"))
   assert new_institution_response.status_code == 403
-  
+
+def test_read_institutions(client: TestClient, session: Session):
+  _create_and_login_user(client=client, session=session, rol="Admin")
+
+  new_institution = InstitutionCreate(
+    name="Example institution",
+    description="Example",
+    color="fafafa",
+    logo="Example logo"
+  )
+
+  new_institution_response = client.post("/v1/institutions/", json=new_institution.model_dump(mode="json"))
+  assert new_institution_response.status_code == 201
+
+  data = new_institution_response.json()
+
+  new_institution = InstitutionCreate(
+    name="Example institution 2",
+    description="Example 2",
+    color="fafafa",
+    logo="Example logo 2"
+  )
+
+  new_institution_response = client.post("/v1/institutions/", json=new_institution.model_dump(mode="json"))
+  assert new_institution_response.status_code == 201
+
+  institutions_response = client.get("/v1/institutions/")
+  assert institutions_response.status_code == 200
+
+  data = institutions_response.json()
+
+  assert len(data) > 0
+
+def test_read_institution_by_id(client: TestClient, session: Session):
+  _create_and_login_user(client=client, session=session, rol="Admin")
+
+  new_institution = InstitutionCreate(
+    name="Example institution",
+    description="Example",
+    color="fafafa",
+    logo="Example logo"
+  )
+
+  new_institution_response = client.post("/v1/institutions/", json=new_institution.model_dump(mode="json"))
+  assert new_institution_response.status_code == 201
+
+  institution_response = client.get("/v1/institutions/999")
+  assert institution_response.status_code == 404
+
+  institution_response = client.get("/v1/institutions/1")
+  assert institution_response.status_code == 200
+
+  institution_data = InstitutionResponse.model_validate(institution_response.json())
+  assert institution_data.id == 1
+  assert institution_data.name == "Example institution"
+  assert institution_data.description == "Example"
+  assert institution_data.color == "fafafa"
+  assert institution_data.logo == "Example logo"
+  assert institution_data.users == []
