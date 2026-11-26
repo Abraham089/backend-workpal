@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship, UniqueConstraint
 from typing import TYPE_CHECKING
 
@@ -15,8 +14,13 @@ class ProjectMembersBase(SQLModel):
   is_leader: bool = Field(default=False)
   joined_at: date = Field(default_factory=lambda: date.today())
 
-class ProjectMemberCreate(ProjectMembersBase):
-  user_id: int
+class ProjectMemberCreate(SQLModel):
+  model_config = {'extra': 'forbid'}
+  user_id = int 
+  can_edit_project_details: bool = False
+  can_manage_tasks: bool = True
+  can_delete_tasks: bool = False
+  can_invite_members: bool = False
 
 class ProjectMemberUpdate(SQLModel):
   can_edit_project_details: bool
