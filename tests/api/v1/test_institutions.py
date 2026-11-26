@@ -64,3 +64,7 @@ def test_post_institution(client: TestClient, session: Session):
   assert new_institution.users == []
 
   _create_and_login_user(client=client, session=session, username="example1234", mail="examplemail2@gmail.com", rol="no admin")
+
+  new_institution_response = client.post("/v1/institutions/", json=new_institution.model_dump(mode="json"))
+  assert new_institution_response.status_code == 403
+  
