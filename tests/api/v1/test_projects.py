@@ -381,6 +381,12 @@ def test_put_project_member(client: TestClient, session: Session):
     can_manage_tasks=True
   )
 
+  project_member_response = client.put("/v1/projects/1/project_member/1/", json=new_member_data.model_dump(mode="json"))
+  assert project_member_response.status_code == 403
+
+  project_member_response = client.put("/v1/projects/1/project_member/999/", json=new_member_data.model_dump(mode="json"))
+  assert project_member_response.status_code == 404
+
   project_member_response = client.put("/v1/projects/1/project_member/2/", json=new_member_data.model_dump(mode="json"))
   assert project_member_response.status_code == 202
 
@@ -472,8 +478,77 @@ def test_delete_project(client: TestClient, session: Session):
   project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
   assert project_create_response.status_code == 201
 
+  delete_project_response = client.delete("/v1/projects/999")
+  
+  assert delete_project_response.status_code == 404
+
   delete_project_response = client.delete("/v1/projects/1")
 
   assert delete_project_response.status_code == 200
   data = delete_project_response.json()
   assert data == 1
+
+def test_delete_project_member(client: TestClient, session: Session):
+  user_data = _create_and_login_user(client, session)
+
+  new_project = ProjectCreate(
+    name="Example Project",
+    description="Example description",
+    img="img example",
+    status="Active",
+    created_by_id=user_data.id,
+    ending_date=ENDING_DATE
+  )
+  
+  project_create_response = client.post("/v1/projects/", json=new_project.model_dump(mode="json"))
+  assert project_create_response.status_code == 201
+  
+  rol = Roles(name= "example rol")
+  saved_rol = save(session, rol)
+  
+  user_2 = UserCreate(
+    name="example name 2",
+    last_name="example last name 2",
+    username="example1234",
+    mail="examplemail2@gmail.com",
+    is_active=True,
+    password="example_password123",
+    role_id=saved_rol.id
+  )
+    
+  user_2_response = client.post("/v1/users/", json=user_2.model_dump())
+  user_2_data = UserSummary.model_validate(user_2_response.json())
+  
+  assert user_2_response.status_code == 201
+  
+  new_project_member = ProjectMemberCreate(
+    can_edit_project_details= False,
+    can_manage_tasks= True,
+    can_delete_tasks= False,
+    can_invite_members= False,
+    is_leader= False,
+    user_id= user_2_data.id
+  )
+  
+  project_member_response = client.post("/v1/projects/1/members/", json=new_project_member.model_dump(mode="json"))
+  assert project_member_response.status_code == 201
+
+  login_data = {
+    "username": "example123",
+    "password": "example_password123"
+  }
+      
+  login_response = client.post("/v1/auth/token", data=login_data)
+  assert login_response.status_code == 202
+
+  project_member_delete_response = client.delete("/v1/projects/1/project_member/999")
+  assert project_member_delete_response.status_code == 404
+
+  project_member_delete_response = client.delete("/v1/projects/1/project_member/1")
+  assert project_member_delete_response.status_code == 403
+
+  project_member_delete_response = client.delete("/v1/projects/1/project_member/2")
+  assert project_member_delete_response.status_code == 202
+
+  data = project_member_delete_response.json()
+  assert data == True

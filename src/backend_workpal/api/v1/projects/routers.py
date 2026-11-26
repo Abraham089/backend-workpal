@@ -206,7 +206,7 @@ def update_project_member(
   updatable_member = project_member_service.get_project_member_by_project_and_user_ids(project_id, member_id, session)
 
   if not updatable_member:
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"No se encontro el usuario con id {member_id} en el proyecto con id {project_id}")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se encontro el usuario con id {member_id} en el proyecto con id {project_id}")
   
   if updatable_member.is_leader:
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede editar al lider del proyecto")
@@ -223,7 +223,7 @@ def update_project_member(
   updated_member = project_member_service.update_project_member(update_data, updatable_member, session)
 
   if not updated_member:
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fue posinle editar al miembro")
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fue posible editar al miembro")
   
   return updated_member
 
@@ -251,3 +251,29 @@ def delete_project(
   project = project_service.delete_project(delete_project_id, session)
   
   return project
+
+@router.delete("/{project_id}/project_member/{member_id}/", response_model= int, status_code=status.HTTP_202_ACCEPTED)
+def delete_project_member(
+  project_id: int,
+  member_id: int,
+  current_member: Annotated[ProjectMembers, Depends(get_add_member_user)],
+  session: Annotated[Session, Depends(get_session)],
+  ):
+
+  deletable_member = project_member_service.get_project_member_by_project_and_user_ids(project_id, member_id, session)
+
+  if not deletable_member:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No se encontro el usuario con id {member_id} en el proyecto con id {project_id}")
+  
+  if deletable_member.is_leader:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede eliminar al lider del proyecto")
+
+  if not current_member.is_leader and (deletable_member.can_invite_members and deletable_member.id != current_member.id) :
+      raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el lider puede eliminar a los usuarios con permisos de invitar usuarios")
+
+  deleted_member = project_member_service.delete_project_member(deletable_member, session)
+
+  if not deleted_member:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fue posible eliminar al miembro")
+  
+  return deleted_member
