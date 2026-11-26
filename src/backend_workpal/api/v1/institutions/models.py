@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING, List
 from ..institution_with_user.models import InstitutionWithUser
 
+from ..users.models import UserSummary
+
 if TYPE_CHECKING:
   from ..users.models import Users
 
@@ -10,6 +12,13 @@ class InstitutionBase(SQLModel):
   description: str = Field(max_length=500)
   color: str = Field(max_length=6)
   logo: str
+
+class InstitutionCreate(InstitutionBase):
+  pass
+
+class InstitutionResponse(InstitutionBase):
+  id: int
+  users: List[UserSummary]
 
 class Institutions(InstitutionBase, table=True):
   id: int = Field(default=None, primary_key=True)
