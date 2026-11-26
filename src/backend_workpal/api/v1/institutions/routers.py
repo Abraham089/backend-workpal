@@ -16,6 +16,33 @@ router = APIRouter(
 
 institution_service = InstitutionService()
 
+@router.get("/", response_model=List[InstitutionResponse], status_code=status.HTTP_200_OK)
+def read_institutions(
+  current_user: Annotated[UserResponse, Depends(get_admin_user)],
+  session: Annotated[Session, Depends(get_session)],
+):
+  
+  institutions = institution_service.get_all_institutions(session)
+
+  return institutions
+
+@router.get("/{institution_id}", response_model=InstitutionResponse, status_code=status.HTTP_200_OK)
+def read_institution_by_id(
+  current_user: Annotated[UserResponse, Depends(get_admin_user)],
+  institution_id: int,
+  session: Annotated[Session, Depends(get_session)],
+):
+  
+  institution = institution_service.get_institution_by_id(institution_id, session)
+
+  if not institution:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"No se encontro la institucion con id {institution_id}"
+      )
+  
+  return institution
+
 @router.post("/", response_model=InstitutionResponse, status_code=status.HTTP_201_CREATED)
 def post_new_institution(
   current_user: Annotated[UserResponse, Depends(get_admin_user)],
