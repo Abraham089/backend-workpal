@@ -126,4 +126,9 @@ class ProjectMemberService:
     session.refresh(saved_member, ["user", "project"])
 
     return saved_member
-  
+
+  def delete_project_member(self, member: ProjectMembers, session: Session)-> bool:
+    session.delete(member)
+    session.commit()
+
+    return True
