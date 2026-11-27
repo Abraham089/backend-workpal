@@ -11,7 +11,7 @@ class InstitutionBase(SQLModel):
   name: str = Field(unique=True)
   description: str = Field(max_length=500)
   color: str = Field(max_length=6)
-  logo: str
+  logo: str = Field(unique=True)
 
 class InstitutionCreate(InstitutionBase):
   pass
