@@ -61,6 +61,15 @@ def get_current_user(session: Annotated[Session, Depends(get_session)], access_t
         raise credentials_exception
     return user
 
+def get_admin_user(
+      current_user: Annotated[UserResponse, Depends(get_current_user)]
+    ):
+    if current_user.role.name.lower() != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This user dont have rights to do this action")
+    return current_user
+
 def get_current_project_member_user(
       session: Annotated[Session, Depends(get_session)],
       current_user: Annotated[UserResponse, Depends(get_current_user)],
