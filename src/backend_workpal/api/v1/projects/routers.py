@@ -32,7 +32,7 @@ def get_all_projects(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
   session: Annotated[Session, Depends(get_session)],
 ):
-  projects = project_service.read_all_projects(session)
+  projects = project_service.read_all_projects(session, current_user.id)
   return projects
 
 @router.get("/{id_project}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -41,7 +41,7 @@ def get_projects_by_id(
   id_project: int,
   session: Annotated[Session, Depends(get_session)],
 ):
-  project = project_service.read_project_by_id(id_project, session)
+  project = project_service.read_project_by_id(id_project, session, current_user.id)
 
   if not project:
     raise HTTPException(
@@ -110,19 +110,18 @@ def create_project(
 
 @router.post("/{project_id}/members/", response_model=bool, status_code=status.HTTP_201_CREATED)
 def create_project_member(
-  current_user: Annotated[ProjectMemberResponse, Depends(get_current_project_member_user)],
+  current_user: Annotated[ProjectMembers, Depends(get_current_project_member_user)],
   project_id: int,
   new_member_data: ProjectMemberCreate,
   session: Annotated[Session, Depends(get_session)],
   ):
 
-  if current_user.can_invite_members is False:
-    raise HTTPException(
-      status_code=status.HTTP_401_UNAUTHORIZED,
-      detail="No se tiene permiso para añadir miembros"
-      )
-  
-  new_member = project_member_service.create_project_member(project_id, new_member_data, session)
+  # if current_user.can_invite_members is False:
+  #   raise HTTPException(
+  #     status_code=status.HTTP_401_UNAUTHORIZED,
+  #     detail="No se tiene permiso para añadir miembros"
+  #     )
+  new_member = project_member_service.create_project_member(project_id, new_member_data, session,current_user)
 
   if not new_member:
     raise HTTPException(
@@ -157,7 +156,7 @@ def update_project(
   session: Annotated[Session, Depends(get_session)],
   ):
   
-  project_updated = project_service.read_project_by_id(updated_project_id, session)
+  project_updated = project_service.read_project_by_id(updated_project_id, session,current_user.id)
 
   if not project_updated:
     raise HTTPException(
@@ -234,7 +233,7 @@ def delete_project(
   session: Annotated[Session, Depends(get_session)],
 ):
 
-  deleted_project = project_service.read_project_by_id(delete_project_id, session)
+  deleted_project = project_service.read_project_by_id(delete_project_id, session, current_user.id)
 
   if not deleted_project:
     raise HTTPException(

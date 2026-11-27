@@ -1,7 +1,8 @@
-from fastapi import HTTPException
+from fastapi import HTTPException,status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload,selectinload
 from sqlmodel import Session, select
+from sqlalchemy import exists, or_
 
 from backend_workpal.api.v1.project_members.models import ProjectMembers
 from backend_workpal.api.v1.users.models import Users
@@ -11,21 +12,34 @@ from .models import ProjectCreate, Projects, ProjectUpdate
 
 
 class ProjectService:
-  def read_project_by_id(self, project_id:int, session: Session)-> Projects | None:
+  def read_project_by_id(self, project_id: int, session: Session, user_id: int | None = None) -> Projects | None:
     statement = select(Projects).where(Projects.id == project_id).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
-      joinedload(Projects.members),
+      selectinload(Projects.members).selectinload(ProjectMembers.user)
     )
-    return session.exec(statement).unique().first()
 
-  def read_all_projects(self, session: Session)->list[Projects]:
+    if user_id is not None:
+      es_miembro = exists().where(ProjectMembers.project_id == Projects.id, ProjectMembers.user_id == user_id)
+      statement = statement.where(
+        or_(Projects.created_by_id == user_id, Projects.supervisor_user_id == user_id, es_miembro)
+      )
+    return session.exec(statement).first()
+
+  def read_all_projects(self, session: Session, user_id: int | None = None)->list[Projects]:
     statement = select(Projects).options(
       joinedload(Projects.created_by),
       joinedload(Projects.supervisor_user),
-      joinedload(Projects.members),
+      selectinload(Projects.members).selectinload(ProjectMembers.user),
     )
-    return list(session.exec(statement).unique().all())
+
+    if user_id is not None:
+      es_miembro = exists().where(ProjectMembers.project_id == Projects.id, ProjectMembers.user_id == user_id)
+      statement = statement.where(
+        or_(Projects.created_by_id == user_id, Projects.supervisor_user_id == user_id, es_miembro)
+      )
+
+    return list(session.exec(statement).all())
 
   def create_project(self, new_project_data: ProjectCreate,created_id:int,  session: Session):
     if new_project_data.supervisor_user_id is not None and session.get(Users, new_project_data.supervisor_user_id) is None:
@@ -69,10 +83,9 @@ class ProjectService:
     if "name" in project_data:
       existe_projecto = session.exec(select(Projects).where(Projects.name == project_data["name"])).first()
       
-      
-    if existe_projecto and existe_projecto.id != updatable_project :
-      raise HTTPException(
-        status_code=409,
+      if existe_projecto and existe_projecto.id != updatable_project :
+        raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
         detail=f"Ya existe el projecto {project_data['name']}"
       )
       
