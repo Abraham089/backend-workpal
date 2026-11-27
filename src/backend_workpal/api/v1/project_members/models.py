@@ -16,7 +16,7 @@ class ProjectMembersBase(SQLModel):
 
 class ProjectMemberCreate(SQLModel):
   model_config = {'extra': 'forbid'}
-  user_id = int 
+  user_id : int 
   can_edit_project_details: bool = False
   can_manage_tasks: bool = True
   can_delete_tasks: bool = False
