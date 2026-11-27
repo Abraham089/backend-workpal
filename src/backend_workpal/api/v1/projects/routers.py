@@ -32,7 +32,7 @@ def get_all_projects(
   current_user: Annotated[UserResponse, Depends(get_current_user)],
   session: Annotated[Session, Depends(get_session)],
 ):
-  projects = project_service.read_all_projects(session,current_user)
+  projects = project_service.read_all_projects(session, current_user.id)
   return projects
 
 @router.get("/{id_project}", response_model=ProjectResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -41,7 +41,7 @@ def get_projects_by_id(
   id_project: int,
   session: Annotated[Session, Depends(get_session)],
 ):
-  project = project_service.read_project_by_id(id_project, session,current_user)
+  project = project_service.read_project_by_id(id_project, session, current_user.id)
 
   if not project:
     raise HTTPException(

@@ -109,7 +109,6 @@ def test_post_member_to_project(client: TestClient, session: Session):
     can_manage_tasks= True,
     can_delete_tasks= False,
     can_invite_members= False,
-    is_leader= False,
     user_id= user_2_data.id
   )
 
@@ -367,7 +366,6 @@ def test_put_project_member(client: TestClient, session: Session):
     can_manage_tasks= True,
     can_delete_tasks= False,
     can_invite_members= False,
-    is_leader= False,
     user_id= user_2_data.id
   )
   
@@ -526,7 +524,6 @@ def test_delete_project_member(client: TestClient, session: Session):
     can_manage_tasks= True,
     can_delete_tasks= False,
     can_invite_members= False,
-    is_leader= False,
     user_id= user_2_data.id
   )
   
